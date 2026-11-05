@@ -87,3 +87,4 @@ const CommentSection = ({ postId, initialComments = [], onAddComment }) => {
 };
 
 export default CommentSection;
+

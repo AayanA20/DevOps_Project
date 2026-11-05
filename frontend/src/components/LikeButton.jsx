@@ -51,3 +51,4 @@ const LikeButton = ({ isLiked: initialIsLiked, likesCount: initialCount, onToggl
 };
 
 export default LikeButton;
+

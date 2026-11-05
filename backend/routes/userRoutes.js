@@ -19,3 +19,4 @@ router.route('/:id/follow')
   .delete(protect, unfollowUser);
 
 export default router;
+

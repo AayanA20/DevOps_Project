@@ -148,3 +148,4 @@ const CreatePostModal = ({ isOpen, onClose, onSubmit }) => {
 };
 
 export default CreatePostModal;
+

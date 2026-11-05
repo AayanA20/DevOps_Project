@@ -98,3 +98,4 @@ const ProfileHeader = ({ profileUser, postsCount = 0, isFollowing, onFollowToggl
 };
 
 export default ProfileHeader;
+

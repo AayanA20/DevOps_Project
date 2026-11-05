@@ -30,3 +30,4 @@ export const generateUploadSignature = (folder = 'mini_instagram_posts') => {
 };
 
 export default cloudinary;
+
