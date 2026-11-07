@@ -112,14 +112,65 @@
   - [x] Cursor pagination (`?cursor=<epoch>_<postId>&limit=20`) returning `{ posts, nextCursor }`
 - [x] Live System Telemetry Endpoint (`GET /api/v1/system/architecture`):
   - Real-time cache hits/misses, active keys, event bus throughput, memory usage, and capacity baseline.
-- [x] Automated test suite expanded to 15/15 passing tests (`tests/health.test.js` + `tests/phase4_5.test.js`).
+- **Status:** COMPLETED
+
+### Phase 6: Automated Testing Expansion (Backend node:test + Frontend Vitest)
+- [x] Backend native test runner (`node:test` + `supertest`) verified: 15/15 existing tests passing.
+- [x] Added backend edge case & resilience test suite (`backend/tests/edge_cases.test.js`):
+  - [x] Malformed and missing JWT Bearer token rejection (401 UNAUTHORIZED with standard error schema).
+  - [x] `generateTokens` access and refresh token pair generation.
+  - [x] Idempotency middleware deduplication with `Idempotency-Key` and `HIT-IDEMPOTENT` cached response.
+  - [x] Sliding window rate limiter threshold enforcement and HTTP 429 status code.
+  - [x] Cache TTL expiration and automated eviction.
+  - [x] Atomic Redis counter `INCR` initialization and increments.
+  - [x] Cache hit/miss statistics tracking.
+  - [x] Kafka EventBus Dead-Letter Queue (DLQ) routing upon repeated consumer failure.
+  - [x] Feed cursor pagination limit clamping and boundary validation.
+  - [x] Standardized 404 error envelope for unhandled API paths.
+  - [x] Total backend tests passing: **26 / 26 tests**.
+- [x] Configured modern frontend test runner with Vitest, React Testing Library, and JSDOM:
+  - [x] `frontend/vite.config.js` and `frontend/src/tests/setup.js` configured.
+  - [x] `LikeButton.test.jsx`: initial count, optimistic toggle, singular/plural grammar, revert on network failure.
+  - [x] `ErrorMessage.test.jsx`: conditional render, error text display, retry callback trigger.
+  - [x] `LoadingSpinner.test.jsx`: default and custom loading state indicators.
+  - [x] `PostCard.test.jsx`: author branding, caption, lazy-loaded media, like counter, and author delete button.
+  - [x] Total frontend tests passing: **11 / 11 tests**.
+- [x] Combined project automated test verification: **37 / 37 tests passing (100% pass rate)**.
+- **Status:** COMPLETED
+
+### Phase 7: Docker Containerization & Docker Compose Orchestration
+- [x] Authored production-ready `backend/Dockerfile`:
+  - Multi-stage dependency caching (`package*.json` layer before source code).
+  - Lean `node:20-alpine` base image with production-only dependencies (`npm ci --omit=dev`).
+  - Non-root user execution (`USER node`) for Linux security hardening.
+  - Automated health check probe (`curl -f http://localhost:5000/health`).
+- [x] Authored production-ready `frontend/Dockerfile` & `frontend/nginx.conf`:
+  - Multi-stage build (Node 20 Alpine builder $\rightarrow$ Nginx Alpine runtime).
+  - Production Vite bundling (`npm run build`).
+  - Custom Nginx reverse proxy forwarding `/api/` traffic directly to the backend container over Docker bridge.
+  - Client-side Single Page Application (SPA) fallback routing (`try_files $uri $uri/ /index.html`).
+  - Gzip asset compression and static asset caching headers.
+  - Container health check probe (`wget -qO- http://127.0.0.1/`).
+- [x] Authored `.dockerignore` files for both frontend and backend to exclude `node_modules`, test files, and local logs.
+- [x] Authored root `docker-compose.yml` orchestrating 4 services on a dedicated bridge network (`mini-instagram-network`):
+  1. `mongo`: MongoDB 7 with persistent named volume `mini-instagram-mongo-data` and `mongosh` health check.
+  2. `redis`: Redis 7 Alpine with `redis-cli ping` health check.
+  3. `backend`: Node.js Express service depending on healthy `mongo` and `redis`.
+  4. `frontend`: React + Nginx service reverse-proxying API calls to `backend`.
+- [x] Verified full live multi-container orchestration with `docker compose up -d`:
+  - `mini-instagram-backend`: **Up (healthy)** on `http://localhost:5000`.
+  - `mini-instagram-frontend`: **Up (healthy)** on `http://localhost:3000`.
+  - `mini-instagram-mongo`: **Up (healthy)** on `localhost:27017`.
+  - `mini-instagram-redis`: **Up (healthy)** on `localhost:6379`.
+- [x] Verified inter-container reverse proxy and live HTTP endpoints:
+  - `http://localhost:5000/health` $\rightarrow$ HTTP 200 OK
+  - `http://localhost:3000/health` $\rightarrow$ HTTP 200 OK (reverse-proxied via Nginx)
+  - `http://localhost:3000/` $\rightarrow$ HTTP 200 OK (React SPA index)
 - **Status:** COMPLETED
 
 ---
 
 ## Next Steps (Upon User Approval)
-- [ ] **Phase 6:** Automated test expansion (frontend Vitest tests).
-- [ ] **Phase 7:** Docker containerization (`frontend/Dockerfile`, `backend/Dockerfile`, `docker-compose.yml`).
 - [ ] **Phase 8:** GitHub Actions CI/CD pipeline (`.github/workflows/ci.yml`).
 - [ ] **Phase 9:** Production deployment preparation for Vercel / Render / Cloud.
 - [ ] **Phase 10:** Comprehensive university demonstration guide and final presentation script.

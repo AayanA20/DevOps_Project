@@ -1,0 +1,83 @@
+services:
+  # 1. Database Service (MongoDB 7)
+  mongo:
+    image: mongo:7
+    container_name: mini-instagram-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - mini-instagram-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # 2. In-Memory Cache Service (Redis 7 Alpine)
+  redis:
+    image: redis:7-alpine
+    container_name: mini-instagram-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - mini-instagram-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  # 3. Application Backend (Node.js Express REST API)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mini-instagram-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - MONGO_URI=mongodb://mongo:27017/mini-instagram
+      - JWT_SECRET=dev_jwt_secret_mini_instagram_docker_compose_super_secure
+      - FRONTEND_URL=http://localhost:3000
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - mini-instagram-network
+
+  # 4. Web Frontend (React + Vite + Tailwind served by Nginx Alpine)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=/api
+    container_name: mini-instagram-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - mini-instagram-network
+
+networks:
+  mini-instagram-network:
+    name: mini-instagram-network
+    driver: bridge
+
+volumes:
+  mongo_data:
+    name: mini-instagram-mongo-data
+    driver: local

@@ -214,36 +214,69 @@ All endpoints use base path `/api/v1` and standard HTTP status codes:
 
 ## 🚀 Running the Project
 
-### Prerequisites
+### Option A: Complete Multi-Container Stack via Docker Compose (Recommended)
+With Docker and Docker Compose installed:
+```bash
+# Build and run backend, frontend, MongoDB and Redis simultaneously
+docker compose up --build -d
+
+# Check all 4 containers and their health probes
+docker compose ps
+
+# View live container logs
+docker compose logs -f
+```
+**Live Container Access Points:**
+- **Web Application (React SPA + Nginx):** `http://localhost:3000`
+- **Backend API Direct:** `http://localhost:5000`
+- **API Health Check (Nginx Reverse Proxy):** `http://localhost:3000/health`
+- **MongoDB Database:** `localhost:27017`
+- **Redis Cache:** `localhost:6379`
+
+### Option B: Local Node.js Development
+#### Prerequisites
 - Node.js (v18+)
 - npm (v9+)
 
-### 1. Run Backend
+#### 1. Run Backend
 ```bash
 cd backend
 npm install
-npm test            # Runs complete test suite (15/15 passing)
+npm test            # Runs complete test suite (26/26 passing)
 npm run dev         # Starts server on http://localhost:5000
 ```
 
-### 2. Run Frontend
+#### 2. Run Frontend
 ```bash
 cd frontend
 npm install
+npm test            # Runs Vitest component test suite (11/11 passing)
 npm run build       # Bundles production Vite build (0 errors)
 npm run dev         # Launches Vite dev server on http://localhost:5173
 ```
 
 ---
 
-## 🧪 Automated Test Verification
+## 🧪 Automated Test Verification (Phase 6: 37 / 37 Passing Tests)
 
-Run automated tests inside `backend/`:
+### 1. Backend Integration & Edge Case Tests (`backend/`)
 ```bash
+cd backend
 npm test
 ```
-**Output:**
-```
+**Output (26 / 26 passing):**
+```text
+✔ AUTH: Malformed or invalid JWT Bearer token returns 401 UNAUTHORIZED
+✔ AUTH: Missing Bearer scheme (token only) returns 401 UNAUTHORIZED
+✔ TOKEN: generateTokens creates valid access and refresh token pair
+✔ IDEMPOTENCY: Middleware intercepts repeat Idempotency-Key and returns cached outcome
+✔ RATE LIMITER: Sliding window returns HTTP 429 when threshold exceeded
+✔ CACHE: Key expiration removes item after TTL
+✔ CACHE: Atomic INCR on non-existent key initializes to 1
+✔ CACHE: Stats tracks hits and misses accurately
+✔ EVENTBUS: Dead-letter queue captures failed consumer events after retries
+✔ FEED: Cursor pagination handles limit bounds
+✔ NOT FOUND: Unregistered v1 endpoint returns standardized 404 error shape
 ✔ GET /health returns healthy status code 200
 ✔ GET /api/health returns service identification
 ✔ GET / returns API welcome info and route index
@@ -260,7 +293,23 @@ npm test
 ✔ CacheService verifies Redis Sorted Sets & Hash operations (Section 4D)
 ✔ EventBus publishes to Kafka topics with outbox pattern and deduplication (Section 5D)
 
-ℹ tests 15 | suites 0 | pass 15 | fail 0 | cancelled 0
+ℹ tests 26 | suites 0 | pass 26 | fail 0 | cancelled 0
+```
+
+### 2. Frontend Component & State Tests (`frontend/`)
+```bash
+cd frontend
+npm test
+```
+**Output (11 / 11 passing):**
+```text
+ ✓ src/tests/LoadingSpinner.test.jsx (2 tests)
+ ✓ src/tests/ErrorMessage.test.jsx (3 tests)
+ ✓ src/tests/LikeButton.test.jsx (4 tests)
+ ✓ src/tests/PostCard.test.jsx (2 tests)
+
+ Test Files  4 passed (4)
+      Tests  11 passed (11)
 ```
 
 ---
@@ -275,3 +324,9 @@ npm test
    Posts and likes are saved safely in the primary store along with an outbox record (Transactional Outbox pattern). Once Kafka recovers, the relay resumes dispatching events without any data loss.
 4. **Why microservices for system design but a monolith for the mini project?**  
    Microservices are designed for 10M users and multi-team scaling. For a university DevOps submission, a modular monolithic architecture (React, Express, MongoDB) is vastly faster to develop, test, containerize, and deploy within CI/CD pipelines.
+5. **What is the difference between containerizing with Docker and deploying on Vercel?**  
+   Docker runs a persistent, long-running Linux container (daemon) with stateful in-memory processes, custom networking, and dedicated ports. Vercel is a serverless platform that deploys static frontend bundles to a global CDN and executes API logic inside short-lived, ephemeral serverless functions that sleep when idle.
+6. **Why use multi-stage Docker builds?**  
+   In `frontend/Dockerfile`, the build stage uses Node 20 to install dependencies and compile Vite bundles. The production runtime stage uses `nginx:alpine` (~25 MB) and copies only the compiled static assets. This eliminates developer tools, compilers, and `node_modules` from the production image, dramatically improving security and pull times.
+7. **How does Nginx avoid CORS issues in Docker Compose?**  
+   Nginx serves the frontend on port 80 and reverse-proxies `/api/` calls directly to `http://backend:5000/api/` inside the private Docker network. To the user's browser, both the HTML and the API appear on the same origin (`localhost:3000`), completely eliminating Cross-Origin Resource Sharing (CORS) blocks.
