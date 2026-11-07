@@ -616,6 +616,126 @@ graph TD
 
 ---
 
+## 4F. Instagram's Real Documented Architecture: Historical vs. Modern Meta Infrastructure
+
+To distinguish real-world engineering from common online tutorial simplifications, this section examines the actual technologies Instagram has deployed throughout its engineering history, citing publicly available engineering blogs and official Meta documentation.
+
+### Architectural Classification Legend
+* 🏛️ **[HISTORICAL (2010–2014)]**: Publicly documented technologies used by Instagram during its independent AWS startup era.
+* 🔄 **[LATER ARCHITECTURE (2014–2020)]**: Technologies developed or deployed post-acquisition as scale surged to hundreds of millions.
+* ⚡ **[CURRENTLY CONFIRMED (2020–Present)]**: Technologies confirmed by Meta Engineering to power Instagram's modern production infrastructure.
+* 🎓 **[PROPOSED FOR MINI INSTAGRAM]**: Architectural patterns adopted specifically for our university educational project.
+
+---
+
+### Detailed Technology Breakdown
+
+#### 1. Python and Django
+* **Classification:** ⚡ **[CURRENTLY CONFIRMED]**
+* **What it does:** Python is a dynamic high-level programming language; Django is a batteries-included web framework providing routing, ORM, and authentication middleware.
+* **Why Instagram used it:** In 2010, co-founders Kevin Systrom and Mike Krieger selected Django for development speed. Instagram scaled to 30 million users with fewer than 15 engineers because Django allowed instant feature iteration without compilation cycles.
+* **Engineering Problem Addressed:** High developer velocity and fast shipping cycles during explosive hyper-growth.
+* **Current Meta Status:** Instagram continues to operate the world’s largest Django deployment. The application tier runs on a custom high-performance runtime called **Cinder** (Meta’s internal performance-oriented Python fork featuring a Method JIT, shadow bytecode compilation, and eager coroutine execution).
+* **Reliable Sources:** 
+  * Meta Engineering Blog: *"Web Service Efficiency at Instagram with Python"* (2016)
+  * Meta Engineering: *"Open-sourcing Cinder, a performance-oriented Python fork"* (2022)
+
+#### 2. PostgreSQL & Custom Sharding
+* **Classification:** 🏛️ **[HISTORICAL (2010–2014)]**
+* **What it does:** Robust, ACID-compliant open-source relational database management system.
+* **Why Instagram used it:** Served as Instagram's primary data store in early architecture (2010–2012) for users, media metadata, auth, and tags.
+* **Engineering Problem Addressed:** Relational integrity and predictable indexing. When data volume exceeded a single server, Instagram pioneered client-side application sharding across dozens of PostgreSQL instances using PL/pgSQL functions and custom 64-bit **Snowflake IDs**:
+  $$\text{ID} = [41 \text{ bits: timestamp epoch}] + [13 \text{ bits: shard ID}] + [10 \text{ bits: auto-increment sequence}]$$
+* **Current Meta Status:** Most relational workloads were migrated into Meta's internal globally distributed data stores (TAO and ZippyDB) post-acquisition.
+* **Reliable Source:** Instagram Engineering Blog: *"Sharding & IDs at Instagram"* (Mike Krieger, 2011).
+
+#### 3. Cassandra
+* **Classification:** 🔄 **[LATER ARCHITECTURE (2014–2018)]**
+* **What it does:** Distributed, wide-column NoSQL database with linear horizontal write scaling, masterless peer-to-peer ring architecture, and tunable consistency ($R+W > N$).
+* **Why Instagram used it:** Replaced early PostgreSQL setups for high-throughput, write-heavy data: home feed timelines, user activity streams, and spam detection.
+* **Engineering Problem Addressed:** Relational databases could not handle millions of concurrent append-only timeline inserts. Cassandra's Log-Structured Merge (LSM) trees handle write-heavy loads with minimal lock contention.
+* **Reliable Source:** Meta Engineering Blog: *"Open-sourcing Rocksandra: Accelerating Cassandra with RocksDB"* (2018).
+
+#### 4. Redis
+* **Classification:** 🏛️ **[HISTORICAL]** & 🔄 **[LATER ARCHITECTURE]**
+* **What it does:** In-memory key-value data structure store supporting Sorted Sets, Hashes, and Lists.
+* **Why Instagram used it:** Caching feed post IDs and user-to-photo ID mappings. Instagram famously packed 300 million key-values into Redis Hashes using contiguous integer buckets, reducing RAM consumption from 21 GB to 5 GB (~85% savings).
+* **Engineering Problem Addressed:** Extreme RAM efficiency at high volume while maintaining sub-millisecond retrieval latencies.
+* **Reliable Source:** Instagram Engineering Blog: *"Storing Hundreds of Millions of Simple Key-Values in RAM"* (2011).
+
+#### 5. Memcached & Mcrouter
+* **Classification:** ⚡ **[CURRENTLY CONFIRMED]**
+* **What it does:** Distributed in-memory object caching system used to absorb read traffic from primary databases.
+* **Why Instagram used it:** Caching database query results, user sessions, and user profiles. To manage thousands of Memcached servers across multiple regional data centers, Meta engineered **mcrouter**—an open-source Memcached protocol router featuring connection pooling, prefix-based routing, and cold-cache warmups.
+* **Engineering Problem Addressed:** Preventing database saturation by achieving $> 98\%$ cache hit ratios across billions of reads/sec.
+* **Reliable Sources:** 
+  * Meta Engineering: *"Scaling Memcache at Facebook"* (USENIX NSDI, 2013)
+  * Meta Engineering: *"Mcrouter: A memcached protocol router for scaling at Facebook"* (2014)
+
+#### 6. RocksDB and Rocksandra
+* **Classification:** 🔄 **[LATER ARCHITECTURE (2018)]**
+* **What it does:** RocksDB is an embeddable, persistent key-value store optimized for high-performance flash SSD storage developed by Meta. **Rocksandra** is Apache Cassandra modified to replace its Java SSTable storage engine with C++ RocksDB.
+* **Why Instagram used it:** In standard Cassandra, Java garbage collection (GC) pauses during major compactions caused severe p99 latency spikes and CPU spikes. Rocksandra eliminated JVM GC pauses, decreased write amplification, and slashed storage requirements by up to 50%.
+* **Engineering Problem Addressed:** High JVM GC tail latencies and storage amplification in high-scale Cassandra clusters.
+* **Reliable Source:** Meta Engineering: *"Open-sourcing Rocksandra: Accelerating Cassandra with RocksDB"* (2018).
+
+#### 7. RabbitMQ and Celery
+* **Classification:** 🏛️ **[HISTORICAL (2011–2013)]**
+* **What it does:** RabbitMQ is an AMQP message broker; Celery is an asynchronous distributed task queue for Python.
+* **Why Instagram used it:** Processing non-critical tasks out-of-band: computing image dimensions, dispatching SMS/email verification, and sending push alerts.
+* **Engineering Problem Addressed:** Preventing long-running secondary tasks from blocking synchronous Django web request workers.
+* **Current Meta Status:** Replaced post-acquisition by Meta’s internal asynchronous streaming and scheduling platforms (e.g., Scribe and FoQS).
+* **Reliable Source:** Instagram Engineering Blog: *"What Powers Instagram: Hundreds of Instances, Dozens of Technologies"* (2011).
+
+#### 8. Gearman
+* **Classification:** 🏛️ **[HISTORICAL (2010–2011)]**
+* **What it does:** Multi-language asynchronous job processing framework.
+* **Why Instagram used it:** Used in Instagram’s very first architecture to distribute feed generation and user notification jobs across a farm of ~200 Python worker instances.
+* **Engineering Problem Addressed:** Simple task distribution before Celery and modern stream processing matured.
+* **Current Meta Status:** Deprecated and decommissioned early.
+* **Reliable Source:** Instagram Engineering Blog: *"What Powers Instagram: Hundreds of Instances, Dozens of Technologies"* (2011).
+
+#### 9. Amazon S3 & CloudFront
+* **Classification:** 🏛️ **[HISTORICAL (2010–2014)]**
+* **What it does:** Amazon S3 provides highly durable cloud object storage; Amazon CloudFront is a global CDN.
+* **Why Instagram used it:** Storing original images and serving cached image renditions to global clients with low latency prior to the Meta data center migration.
+* **Engineering Problem Addressed:** Media durability (11 nines), infinite storage elasticity, and global edge delivery without physical SAN/NAS management.
+* **Reliable Source:** AWS Official Case Study: *"Instagram on AWS"* (2011).
+
+#### 10. Meta Core Infrastructure: TAO and Everstore
+* **Classification:** ⚡ **[CURRENTLY CONFIRMED]**
+* **What it does:** 
+  * **TAO (The Associations and Objects):** Meta's geographically distributed, write-through cached graph data store optimized for social graph associations (users, follows, friendships, likes).
+  * **Everstore:** Meta's distributed blob storage engine optimized for photos and videos, utilizing Reed-Solomon erasure coding and custom hardware racks.
+* **Why Instagram used it:** Migrated off AWS onto Meta’s bare-metal data centers to leverage TAO for millisecond graph queries and Everstore for billions of photos.
+* **Engineering Problem Addressed:** Scale beyond AWS limits, cost efficiency at billions of images, and hardware-optimized storage tiering.
+* **Reliable Sources:** 
+  * Meta Engineering: *"TAO: Facebook’s Distributed Data Store for the Social Graph"* (USENIX ATC 2013)
+  * Meta Engineering: *"Everstore: Facebook’s distributed object storage for billions of photos"* (2014)
+
+#### 11. Modern Python Architecture and asyncio
+* **Classification:** ⚡ **[CURRENTLY CONFIRMED]**
+* **What it does:** High-concurrency asynchronous I/O framework in Python 3.
+* **Why Instagram used it:** To service thousands of microservice RPC calls concurrently without thread starvation. Instagram famously **disabled Python's cyclic garbage collector (GC)** on its web worker processes, saving 10% RAM per server and boosting CPU cache hits by preserving shared Linux Copy-on-Write (CoW) memory pages between parent and worker processes.
+* **Engineering Problem Addressed:** High memory usage and CPU overhead in multi-process Python server fleets.
+* **Reliable Sources:** 
+  * Meta Engineering: *"Dismissing Python Garbage Collection at Instagram"* (2017)
+  * PyCon Talk: *"Python at Scale: Instagram’s asyncio journey"* (2019)
+
+---
+
+### Comparative Evolution Matrix
+| Technology Domain | Early Startup Era (2010–2012) | Growth Era (2014–2018) | Modern Meta Infrastructure (Present) | Our Mini Project Choice |
+| :--- | :--- | :--- | :--- | :--- |
+| **Application Layer** | Python / Django (WSGI) | Python / Django | Python 3 / Django on **Cinder JIT** + `asyncio` | Node.js + Express / React SPA |
+| **Relational Core** | Sharded PostgreSQL (PL/pgSQL) | Sharded PostgreSQL | **TAO** (Graph) + **ZippyDB** (KV) | MongoDB Atlas / Supabase |
+| **Activity & Timelines**| Redis Hashes / PostgreSQL | Cassandra (LSM-Tree) | **Rocksandra** / Internal Log Stores | Redis Sorted Sets / MongoDB |
+| **Caching Tier** | Redis / Memcached | Memcached with `mcrouter` | Regional **Memcached** Fleets + TAO Cache | In-Memory Redis Cache-Aside |
+| **Task Queue** | Gearman $\rightarrow$ RabbitMQ + Celery | Celery / RabbitMQ | **Scribe** + **FoQS** (Internal Streaming) | Async Event Bus / Worker Queue |
+| **Media Storage** | Amazon S3 + CloudFront | Amazon S3 + Akamai/Fastly | **Everstore** + Meta Edge PoPs | Cloudinary / S3 Presigned URLs |
+
+---
+
 ## Viva & University Evaluation Quick Answers
 
 ### Q1: Why use an API Gateway instead of direct client-to-service communication?

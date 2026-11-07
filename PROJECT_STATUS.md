@@ -87,6 +87,7 @@
 
 ### Phase 5: High-Level Architecture, Distributed Scalability & End-to-End Workflows
 - [x] Complete System Design Architecture Documented (Section 5A–5E):
+  - [x] Instagram's Real Architecture Documented (Section 4F: Historical AWS era vs. Modern Meta Infrastructure — Django/Cinder, PostgreSQL sharding, Cassandra, Redis, Memcached/mcrouter, Rocksandra, RabbitMQ/Celery, Gearman, S3/CloudFront, TAO, Everstore, asyncio & GC tuning).
   - [x] Mermaid High-Level Architecture Diagram (Figure 1: Clients $\rightarrow$ L7 LB $\rightarrow$ API Gateway $\rightarrow$ Stateless Containers $\rightarrow$ Kafka $\rightarrow$ Workers $\rightarrow$ Polyglot Stores).
   - [x] Request Lifecycle Sequence Diagram (Figure 2: Direct-to-S3 signed URL photo upload).
   - [x] Polyglot Persistence specifications (PostgreSQL sharded, Cassandra RF=3, Redis Cluster 64GB, S3 + CDN, Elasticsearch).
