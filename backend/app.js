@@ -4,6 +4,8 @@ import cors from 'cors';
 import authRoutes from './routes/authRoutes.js';
 import postRoutes from './routes/postRoutes.js';
 import userRoutes from './routes/userRoutes.js';
+import v1Routes from './routes/v1Routes.js';
+import { rateLimiter } from './middleware/rateLimiter.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 
 dotenv.config();
@@ -32,14 +34,18 @@ app.use(
       return callback(new Error('Blocked by CORS policy'));
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Idempotency-Key'],
+    exposedHeaders: ['Retry-After', 'X-RateLimit-Limit', 'X-RateLimit-Remaining', 'X-RateLimit-Reset'],
   })
 );
 
 // Body Parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Global Rate Limiter (Section 4A: 100 req/min per user/IP enforced at Gateway)
+app.use(rateLimiter(100, 60));
 
 // Health Check Endpoints
 app.get('/health', (req, res) => {
@@ -65,6 +71,11 @@ app.get('/', (req, res) => {
     name: 'Mini Instagram REST API',
     version: '1.0.0',
     documentation: {
+      v1Specification: '/api/v1/system/architecture',
+      authV1: '/api/v1/auth',
+      postsV1: '/api/v1/posts',
+      feedV1: '/api/v1/feed',
+      usersV1: '/api/v1/users',
       auth: '/api/auth',
       posts: '/api/posts',
       users: '/api/users',
@@ -73,7 +84,10 @@ app.get('/', (req, res) => {
   });
 });
 
-// Route Mounts
+// Phase 4 & 5 Primary API Routes (/api/v1)
+app.use('/api/v1', v1Routes);
+
+// Backwards-Compatible Route Mounts (/api)
 app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/users', userRoutes);
@@ -83,4 +97,3 @@ app.use(notFound);
 app.use(errorHandler);
 
 export default app;
-

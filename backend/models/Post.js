@@ -11,7 +11,7 @@ const commentSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Comment text is required'],
       trim: true,
-      maxlength: [300, 'Comment cannot exceed 300 characters'],
+      maxlength: [2200, 'Comment cannot exceed 2200 characters'],
     },
     createdAt: {
       type: Date,
@@ -31,13 +31,38 @@ const postSchema = new mongoose.Schema(
     },
     imageUrl: {
       type: String,
-      required: [true, 'Image URL is required'],
+      default: '',
+    },
+    mediaKey: {
+      type: String,
+      default: '',
+    },
+    mediaType: {
+      type: String,
+      enum: ['IMAGE', 'VIDEO'],
+      default: 'IMAGE',
+    },
+    status: {
+      type: String,
+      enum: ['PROCESSING', 'PUBLISHED'],
+      default: 'PUBLISHED',
+    },
+    thumbnails: {
+      small: { type: String, default: '' },
+      medium: { type: String, default: '' },
+      large: { type: String, default: '' },
+    },
+    hashtags: [{ type: String }],
+    idempotencyKey: {
+      type: String,
+      default: null,
+      index: true,
     },
     caption: {
       type: String,
       default: '',
       trim: true,
-      maxlength: [500, 'Caption cannot exceed 500 characters'],
+      maxlength: [2200, 'Caption cannot exceed 2200 characters'],
     },
     likes: [
       {
@@ -52,10 +77,10 @@ const postSchema = new mongoose.Schema(
   }
 );
 
-// Compound index for feed queries ordered by newest first
+// Compound indexes for feed queries ordered newest first (Section 4D)
 postSchema.index({ createdAt: -1 });
 postSchema.index({ user: 1, createdAt: -1 });
+postSchema.index({ hashtags: 1 });
 
 const Post = mongoose.model('Post', postSchema);
 export default Post;
-
