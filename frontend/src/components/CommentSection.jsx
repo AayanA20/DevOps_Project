@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Send } from 'lucide-react';
 
 const CommentSection = ({ postId, initialComments = [], onAddComment }) => {
   const [comments, setComments] = useState(initialComments);

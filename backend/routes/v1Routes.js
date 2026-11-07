@@ -70,3 +70,4 @@ router.get('/stories', getActiveStories);
 router.get('/system/architecture', getSystemArchitecture);
 
 export default router;
+

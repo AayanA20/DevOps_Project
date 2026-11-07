@@ -18,7 +18,7 @@ const LikeButton = ({ isLiked: initialIsLiked, likesCount: initialCount, onToggl
       if (onToggle) {
         await onToggle(nextState);
       }
-    } catch (err) {
+    } catch {
       // Revert on error
       setIsLiked(!nextState);
       setCount((prev) => (!nextState ? prev + 1 : Math.max(0, prev - 1)));

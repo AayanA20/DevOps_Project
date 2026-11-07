@@ -54,3 +54,4 @@ export const rateLimiter = (limit = 100, windowSeconds = 60) => {
 };
 
 export default rateLimiter;
+

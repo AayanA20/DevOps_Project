@@ -106,3 +106,4 @@ test('EventBus publishes to Kafka topics with outbox pattern and deduplication (
   await cacheService.set(dedupKey, true, 3600);
   assert.equal(await cacheService.get(dedupKey), true);
 });
+

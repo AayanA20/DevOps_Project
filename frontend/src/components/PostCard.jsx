@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { MessageCircle, Trash2, MoreHorizontal } from 'lucide-react';
+import { MessageCircle, Trash2 } from 'lucide-react';
 import LikeButton from './LikeButton';
 import CommentSection from './CommentSection';
 import { useAuth } from '../hooks/useAuth';

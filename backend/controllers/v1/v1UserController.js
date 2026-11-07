@@ -270,3 +270,4 @@ export const getSuggestedUsers = async (req, res, next) => {
     next(error);
   }
 };
+

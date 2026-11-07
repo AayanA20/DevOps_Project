@@ -42,3 +42,4 @@ export const getSystemArchitecture = (req, res) => {
     },
   });
 };
+

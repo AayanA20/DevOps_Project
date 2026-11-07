@@ -629,3 +629,4 @@ graph TD
 
 ### Q4: Why microservices for the system design but a monolithic architecture for the Mini Project?
 **Answer:** Microservices solve organizational and physical scaling challenges at 10M users. For university development and DevOps validation, a modular monolithic architecture (React, Express, MongoDB) is vastly simpler to build, test, containerize, and deploy within CI/CD pipelines without distributed orchestration overhead.
+

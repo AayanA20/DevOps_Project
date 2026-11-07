@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { Grid, Heart, MessageCircle, AlertCircle } from 'lucide-react';
+import { Grid, Heart, MessageCircle } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
 import ProfileHeader from '../components/ProfileHeader';
