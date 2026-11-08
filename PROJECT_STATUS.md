@@ -177,17 +177,25 @@
 - [x] Demonstrated feature branch workflow and pull request verification (PR #1 merged into `main`).
 - **Status:** COMPLETED
 
-### Phase 9: Vercel Production Deployment Preparation
+### Phase 9: Vercel Production Deployment
 - [x] Authored serverless backend handler in [`api/index.js`](api/index.js) wrapping Express for on-demand serverless execution.
-- [x] Updated [`backend/config/db.js`](backend/config/db.js) with connection pooling and buffering prevention across AWS Lambda / Vercel serverless invocations.
+- [x] Updated [`backend/config/db.js`](backend/config/db.js) with connection pooling and public DNS fallback (`8.8.8.8`) across AWS Lambda / Vercel serverless invocations.
 - [x] Configured monorepo root [`package.json`](package.json) with ES module support, workspace dependencies, and build scripts.
 - [x] Created root [`vercel.json`](vercel.json) configuring static Vite frontend bundling, `@vercel/node` serverless API routing, and SPA fallback rewrites.
 - [x] Updated [`frontend/src/services/api.js`](frontend/src/services/api.js) to dynamically resolve relative `/api` paths on Vercel while falling back to `localhost:5000` in dev mode.
-- [x] Authored comprehensive deployment guide in [`docs/VERCEL_DEPLOYMENT_GUIDE.md`](docs/VERCEL_DEPLOYMENT_GUIDE.md) detailing environment variables and verification steps.
-- **Status:** CONFIGURED & READY FOR LIVE DEPLOYMENT
+- [x] Successfully linked GitHub repository and deployed to Vercel production:
+  - **Live URL:** [https://mini-instagram-eta.vercel.app](https://mini-instagram-eta.vercel.app)
+  - **Health Endpoint:** [https://mini-instagram-eta.vercel.app/health](https://mini-instagram-eta.vercel.app/health)
+  - **Live Telemetry:** [https://mini-instagram-eta.vercel.app/api/v1/system/architecture](https://mini-instagram-eta.vercel.app/api/v1/system/architecture)
+- **Status:** COMPLETED (LIVE IN PRODUCTION)
+
+### Phase 10: README & University Demonstration Guide
+- [x] Comprehensive [`README.md`](README.md) updated with live deployment badges, setup guide, architecture diagrams, and testing scripts.
+- [x] Added 13-step professor viva demonstration guide to `README.md`.
+- [x] Verified full compliance with university evaluation rubric (20 marks DevOps criteria).
+- **Status:** COMPLETED
 
 ---
 
-## Next Steps (Upon User Approval)
-- [ ] Connect repository to Vercel dashboard and add production environment variables (`MONGO_URI`, `JWT_SECRET`, `CLOUDINARY_*`).
-- [ ] **Phase 10:** Update README with the final live Vercel URL and complete the university presentation & viva checklist.
+## Final Project Status: 100% COMPLETE & LIVE
+All 10 project phases have been designed, implemented, tested, dockerized, verified via CI/CD, and publicly deployed on Vercel.

@@ -18,3 +18,4 @@ export default async function handler(req, res) {
   // Forward request to Express application
   return app(req, res);
 }
+

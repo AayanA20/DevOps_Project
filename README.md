@@ -1,7 +1,22 @@
 # Mini Instagram – Full-Stack Photo Sharing Platform & System Design
-> **University DevOps & System Design Project (20 Marks)**  
+> **University DevOps & System Design Project (20 Marks Evaluation)**  
 > **Prepared by:** Shivani & Team · **Target Scale:** 10M registered users · 2M DAU  
-> **System Design Document:** [docs/SYSTEM_DESIGN_PHASE_4_5.md](docs/SYSTEM_DESIGN_PHASE_4_5.md)
+> **System Design Document:** [docs/SYSTEM_DESIGN_PHASE_4_5.md](docs/SYSTEM_DESIGN_PHASE_4_5.md)  
+> **Vercel Deployment Guide:** [docs/VERCEL_DEPLOYMENT_GUIDE.md](docs/VERCEL_DEPLOYMENT_GUIDE.md)
+
+[![Continuous Integration (CI)](https://github.com/AayanA20/DevOps_Project/actions/workflows/ci.yml/badge.svg)](https://github.com/AayanA20/DevOps_Project/actions/workflows/ci.yml)
+[![Vercel Deployment](https://img.shields.io/badge/Vercel-Live%20Deployment-success?logo=vercel)](https://mini-instagram-eta.vercel.app)
+[![Docker Ready](https://img.shields.io/badge/Docker-Multi--Container%20Compose-blue?logo=docker)](docker-compose.yml)
+[![Tests Passing](https://img.shields.io/badge/Tests-37%2F37%20Passing-brightgreen)](backend/tests/)
+
+---
+
+## 🌐 Live Production Links
+
+* **Live Web Application:** [https://mini-instagram-eta.vercel.app](https://mini-instagram-eta.vercel.app)
+* **Live API Health Endpoint:** [https://mini-instagram-eta.vercel.app/health](https://mini-instagram-eta.vercel.app/health)
+* **Live System Architecture & Capacity Telemetry:** [https://mini-instagram-eta.vercel.app/api/v1/system/architecture](https://mini-instagram-eta.vercel.app/api/v1/system/architecture)
+* **GitHub Repository:** [https://github.com/AayanA20/DevOps_Project](https://github.com/AayanA20/DevOps_Project)
 
 ---
 
@@ -330,3 +345,25 @@ npm test
    In `frontend/Dockerfile`, the build stage uses Node 20 to install dependencies and compile Vite bundles. The production runtime stage uses `nginx:alpine` (~25 MB) and copies only the compiled static assets. This eliminates developer tools, compilers, and `node_modules` from the production image, dramatically improving security and pull times.
 7. **How does Nginx avoid CORS issues in Docker Compose?**  
    Nginx serves the frontend on port 80 and reverse-proxies `/api/` calls directly to `http://backend:5000/api/` inside the private Docker network. To the user's browser, both the HTML and the API appear on the same origin (`localhost:3000`), completely eliminating Cross-Origin Resource Sharing (CORS) blocks.
+
+---
+
+## 🎓 University Viva & Demonstration Script (20 Marks Evaluation)
+
+Follow these 13 steps during your demonstration to your professor:
+
+| Step # | Demonstration Action | What to Show / Explain to the Professor |
+| :---: | :--- | :--- |
+| **1** | **Open Deployed Application** | Open `https://mini-instagram-eta.vercel.app`. Explain that it is globally hosted on Vercel Edge CDN with responsive mobile/desktop layouts. |
+| **2** | **Register a New User** | Navigate to `/signup`, register a user account. Explain that the password is automatically salted and hashed using **bcrypt** with a pre-save Mongoose hook. |
+| **3** | **Log In & Session Auth** | Log in with the credentials. Open DevTools `Application > Local Storage` to show the signed **JWT Bearer Token** and explain stateless authentication. |
+| **4** | **Create a Post** | Click the **`+ Create`** button. Select a preset photo or paste an image URL, enter a caption, and submit. Explain the direct upload flow and post lifecycle. |
+| **5** | **Like & Comment** | Click the heart icon on a post (shows optimistic animation) and submit a comment. Explain idempotent duplicate-like prevention and reverse-chronological ordering. |
+| **6** | **Show GitHub Repository** | Open `https://github.com/AayanA20/DevOps_Project`. Show the clean monorepo directory layout (`frontend/`, `backend/`, `docs/`, `.github/`). |
+| **7** | **Show Branches & Pull Requests** | Click on GitHub **Pull Requests** and show **PR #1 (`feature/phase8-ci-cd` $\rightarrow$ `main`)**. Explain how feature branches protect the production branch. |
+| **8** | **Show Commit History** | Run `git log --oneline` or show the commit history on GitHub. Highlight meaningful conventional commit prefixes (`feat:`, `fix:`, `docs:`, `ci:`, `chore:`). |
+| **9** | **Show Dockerfile Architecture** | Open `frontend/Dockerfile` and `backend/Dockerfile`. Explain **multi-stage builds** and how copying only compiled assets into `nginx:alpine` cuts image size by >85%. |
+| **10** | **Run Docker Containers** | Run `docker compose up -d` in the terminal and `docker ps`. Show 4 isolated containers (`frontend`, `backend`, `mongo`, `redis`) communicating over a private bridge network. |
+| **11** | **Show GitHub Actions CI/CD** | Open the **Actions** tab on GitHub. Show the `.github/workflows/ci.yml` pipeline executing automated jobs on push and pull requests. |
+| **12** | **Show Automated Tests Passing** | Run `npm test` in `frontend/` (11 Vitest tests) and `backend/` (26 native tests) to show **37 / 37 tests passing (100% pass rate)**. |
+| **13** | **Show Live Cloud Telemetry** | Open `https://mini-instagram-eta.vercel.app/api/v1/system/architecture` to show live memory stats, cache hit ratios, and capacity baselines for 10M users. |

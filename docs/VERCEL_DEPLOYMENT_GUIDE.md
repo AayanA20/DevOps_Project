@@ -80,3 +80,4 @@ Once deployed, verify the following endpoints on your live public URL:
 - [ ] **User Registration:** Sign up a test user on `/signup`. Verify JWT token is saved in `localStorage`.
 - [ ] **Post Creation:** Upload a photo with a caption. Verify it appears on the home feed and user profile grid.
 - [ ] **Engagement:** Toggle a like and add a comment to verify database persistence.
+
