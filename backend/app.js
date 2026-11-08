@@ -1,6 +1,9 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 import authRoutes from './routes/authRoutes.js';
 import postRoutes from './routes/postRoutes.js';
 import userRoutes from './routes/userRoutes.js';
@@ -9,6 +12,10 @@ import { rateLimiter } from './middleware/rateLimiter.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const frontendDist = path.resolve(__dirname, '../frontend/dist');
 
 const app = express();
 
@@ -65,24 +72,28 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Root API Diagnostics
-app.get('/', (req, res) => {
-  res.status(200).json({
-    name: 'Mini Instagram REST API',
-    version: '1.0.0',
-    documentation: {
-      v1Specification: '/api/v1/system/architecture',
-      authV1: '/api/v1/auth',
-      postsV1: '/api/v1/posts',
-      feedV1: '/api/v1/feed',
-      usersV1: '/api/v1/users',
-      auth: '/api/auth',
-      posts: '/api/posts',
-      users: '/api/users',
-      health: '/api/health',
-    },
+// Root API Diagnostics (served when running in API-only mode without compiled frontend)
+if (fs.existsSync(frontendDist)) {
+  app.use(express.static(frontendDist));
+} else {
+  app.get('/', (req, res) => {
+    res.status(200).json({
+      name: 'Mini Instagram REST API',
+      version: '1.0.0',
+      documentation: {
+        v1Specification: '/api/v1/system/architecture',
+        authV1: '/api/v1/auth',
+        postsV1: '/api/v1/posts',
+        feedV1: '/api/v1/feed',
+        usersV1: '/api/v1/users',
+        auth: '/api/auth',
+        posts: '/api/posts',
+        users: '/api/users',
+        health: '/api/health',
+      },
+    });
   });
-});
+}
 
 // Phase 4 & 5 Primary API Routes (/api/v1)
 app.use('/api/v1', v1Routes);
@@ -91,6 +102,16 @@ app.use('/api/v1', v1Routes);
 app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/users', userRoutes);
+
+// SPA client-side routing fallback (when running in standalone container mode)
+if (fs.existsSync(frontendDist)) {
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/health')) {
+      return next();
+    }
+    res.sendFile(path.join(frontendDist, 'index.html'));
+  });
+}
 
 // Error Middleware
 app.use(notFound);
