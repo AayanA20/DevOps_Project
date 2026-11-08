@@ -168,9 +168,26 @@
   - `http://localhost:3000/` $\rightarrow$ HTTP 200 OK (React SPA index)
 - **Status:** COMPLETED
 
+### Phase 8: GitHub Actions CI/CD Pipeline & Branching Strategy
+- [x] Configured multi-job automated CI pipeline in [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
+  - [x] **Backend Job:** Node 20 setup, dependency caching, automated test execution (`npm test` $\rightarrow$ 26/26 passing).
+  - [x] **Frontend Job:** Dependency caching, linter (`npm run lint`), Vitest test suite (`npm test` $\rightarrow$ 11/11 passing), production bundling (`npm run build`).
+  - [x] **Docker Job:** Automated multi-stage container build verification for both frontend and backend images.
+- [x] Configured university team PR template ([`.github/pull_request_template.md`](.github/pull_request_template.md)).
+- [x] Demonstrated feature branch workflow and pull request verification (PR #1 merged into `main`).
+- **Status:** COMPLETED
+
+### Phase 9: Vercel Production Deployment Preparation
+- [x] Authored serverless backend handler in [`api/index.js`](api/index.js) wrapping Express for on-demand serverless execution.
+- [x] Updated [`backend/config/db.js`](backend/config/db.js) with connection pooling and buffering prevention across AWS Lambda / Vercel serverless invocations.
+- [x] Configured monorepo root [`package.json`](package.json) with ES module support, workspace dependencies, and build scripts.
+- [x] Created root [`vercel.json`](vercel.json) configuring static Vite frontend bundling, `@vercel/node` serverless API routing, and SPA fallback rewrites.
+- [x] Updated [`frontend/src/services/api.js`](frontend/src/services/api.js) to dynamically resolve relative `/api` paths on Vercel while falling back to `localhost:5000` in dev mode.
+- [x] Authored comprehensive deployment guide in [`docs/VERCEL_DEPLOYMENT_GUIDE.md`](docs/VERCEL_DEPLOYMENT_GUIDE.md) detailing environment variables and verification steps.
+- **Status:** CONFIGURED & READY FOR LIVE DEPLOYMENT
+
 ---
 
 ## Next Steps (Upon User Approval)
-- [ ] **Phase 8:** GitHub Actions CI/CD pipeline (`.github/workflows/ci.yml`).
-- [ ] **Phase 9:** Production deployment preparation for Vercel / Render / Cloud.
-- [ ] **Phase 10:** Comprehensive university demonstration guide and final presentation script.
+- [ ] Connect repository to Vercel dashboard and add production environment variables (`MONGO_URI`, `JWT_SECRET`, `CLOUDINARY_*`).
+- [ ] **Phase 10:** Update README with the final live Vercel URL and complete the university presentation & viva checklist.
