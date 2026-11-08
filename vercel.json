@@ -23,7 +23,12 @@
       "dest": "/api/index.js"
     },
     {
-      "handle": "filesystem"
+      "src": "/assets/(.*)",
+      "dest": "/frontend/assets/$1"
+    },
+    {
+      "src": "/(.*\\.(?:js|css|ico|png|jpg|jpeg|svg|webp|woff|woff2|ttf|json))",
+      "dest": "/frontend/$1"
     },
     {
       "src": "/(.*)",
@@ -31,4 +36,3 @@
     }
   ]
 }
-
