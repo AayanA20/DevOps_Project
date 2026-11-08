@@ -1,4 +1,12 @@
 import mongoose from 'mongoose';
+import dns from 'dns';
+
+// Fallback to high-reliability public DNS resolvers for mongodb+srv:// SRV lookups
+try {
+  dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+} catch {
+  // Ignore in environments where custom DNS servers cannot be set
+}
 
 /**
  * Global cache for Mongoose connection across serverless invocations (AWS Lambda / Vercel)
