@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, UserPlus, UserCheck, Compass } from 'lucide-react';
+import { Search, UserPlus, UserCheck, Compass, Sparkles, X } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -21,7 +21,6 @@ const Explore = () => {
         const list = data.users || [];
         setUsers(list);
 
-        // Map initial following states
         const currentUserId = currentUser?._id || currentUser?.id;
         const initialMap = {};
         list.forEach((u) => {
@@ -33,7 +32,6 @@ const Explore = () => {
         setFollowingMap(initialMap);
       } catch (err) {
         console.warn('Suggested users unavailable, rendering sample recommendations:', err);
-        // Fallback sample users
         setUsers([
           {
             _id: 'sample-u1',
@@ -54,6 +52,13 @@ const Explore = () => {
             username: 'nature_lens',
             bio: 'Capturing wildlife & landscape wonders 🌿🏔️',
             profilePicture: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop',
+            followers: [],
+          },
+          {
+            _id: 'sample-u4',
+            username: 'urban_shots',
+            bio: 'Street & architectural photography 🏙️',
+            profilePicture: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop',
             followers: [],
           },
         ]);
@@ -89,12 +94,19 @@ const Explore = () => {
       <Navbar />
 
       <main className="md:ml-64 pb-20 md:pb-8 pt-6 px-4">
-        <div className="max-w-xl mx-auto">
+        <div className="max-w-2xl mx-auto">
           {/* Header & Search */}
           <div className="mb-6">
-            <div className="flex items-center space-x-2 mb-3">
-              <Compass className="w-6 h-6 text-instagram-blue" />
-              <h1 className="text-xl font-bold text-gray-900">Explore & Discover</h1>
+            <div className="flex items-center space-x-2.5 mb-3">
+              <div className="w-8 h-8 rounded-xl story-ring p-[1.5px] shadow-sm flex items-center justify-center">
+                <div className="w-full h-full bg-white rounded-[10px] flex items-center justify-center">
+                  <Compass className="w-4 h-4 text-instagram-storyPink" />
+                </div>
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900 tracking-tight">Explore Creators</h1>
+                <p className="text-xs text-gray-500">Discover new photographers and trending profiles</p>
+              </div>
             </div>
 
             <div className="relative">
@@ -103,9 +115,17 @@ const Explore = () => {
                 placeholder="Search community users by username..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-white border border-instagram-border rounded-lg text-sm focus:outline-none focus:border-instagram-blue shadow-sm"
+                className="w-full pl-10 pr-10 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-instagram-blue focus:ring-2 focus:ring-blue-100 shadow-sm transition-all"
               />
               <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-3.5" />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3.5 top-3.5 text-gray-400 hover:text-black"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
           </div>
 
@@ -113,11 +133,11 @@ const Explore = () => {
           {loading ? (
             <LoadingSpinner size="medium" text="Finding creators..." />
           ) : filteredUsers.length === 0 ? (
-            <div className="bg-white border border-instagram-border rounded-xl p-8 text-center text-gray-500 text-sm">
+            <div className="bg-white border border-gray-200 rounded-2xl p-10 text-center text-gray-500 text-sm shadow-sm">
               No users found matching "{searchQuery}".
             </div>
           ) : (
-            <div className="bg-white border border-instagram-border rounded-xl divide-y divide-gray-100 shadow-sm overflow-hidden">
+            <div className="bg-white border border-gray-200/90 rounded-2xl divide-y divide-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.04)] overflow-hidden">
               {filteredUsers.map((itemUser) => {
                 const uId = itemUser._id || itemUser.id;
                 const isFollowing = !!followingMap[uId];
@@ -125,21 +145,29 @@ const Explore = () => {
                   (currentUser?._id || currentUser?.id)?.toString() === uId?.toString();
 
                 return (
-                  <div key={uId} className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
-                    <Link to={`/profile/${uId}`} className="flex items-center space-x-3 truncate flex-1 mr-4">
-                      <img
-                        src={
-                          itemUser.profilePicture ||
-                          `https://ui-avatars.com/api/?name=${itemUser.username}&background=random`
-                        }
-                        alt={itemUser.username}
-                        className="w-11 h-11 rounded-full object-cover border border-instagram-border flex-shrink-0"
-                      />
+                  <div
+                    key={uId}
+                    className="flex items-center justify-between p-4 hover:bg-gray-50/80 transition-colors"
+                  >
+                    <Link
+                      to={`/profile/${uId}`}
+                      className="flex items-center space-x-3.5 truncate flex-1 mr-4 group"
+                    >
+                      <div className="w-12 h-12 rounded-full p-[1.5px] story-ring flex-shrink-0 group-hover:scale-105 transition-transform">
+                        <img
+                          src={
+                            itemUser.profilePicture ||
+                            `https://ui-avatars.com/api/?name=${itemUser.username}&background=random`
+                          }
+                          alt={itemUser.username}
+                          className="w-full h-full rounded-full object-cover border-2 border-white"
+                        />
+                      </div>
                       <div className="truncate">
-                        <p className="text-sm font-semibold text-gray-900 hover:underline truncate">
+                        <p className="text-sm font-bold text-gray-900 group-hover:text-instagram-blue transition-colors truncate">
                           {itemUser.username}
                         </p>
-                        <p className="text-xs text-gray-500 truncate">
+                        <p className="text-xs text-gray-500 truncate leading-relaxed">
                           {itemUser.bio || 'Mini Instagram member'}
                         </p>
                       </div>
@@ -148,10 +176,10 @@ const Explore = () => {
                     {!isMe && (
                       <button
                         onClick={() => handleFollowToggle(uId)}
-                        className={`text-xs font-semibold px-4 py-1.5 rounded transition-colors flex items-center space-x-1 ${
+                        className={`text-xs font-semibold px-4 py-2 rounded-xl transition-all duration-150 flex items-center space-x-1 flex-shrink-0 shadow-sm ${
                           isFollowing
                             ? 'bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300'
-                            : 'bg-instagram-blue hover:bg-instagram-hoverBlue text-white'
+                            : 'bg-instagram-blue hover:bg-instagram-hoverBlue text-white active:scale-95'
                         }`}
                       >
                         {isFollowing ? (
@@ -179,4 +207,3 @@ const Explore = () => {
 };
 
 export default Explore;
-

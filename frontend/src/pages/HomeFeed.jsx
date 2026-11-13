@@ -6,6 +6,8 @@ import ErrorMessage from '../components/ErrorMessage';
 import { postService } from '../services/postService';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
+import StoriesBar from '../components/StoriesBar';
+import RightSidebar from '../components/RightSidebar';
 
 // Sample fallback posts shown only when database is pristine empty
 const INITIAL_DEMO_POSTS = [
@@ -112,49 +114,60 @@ const HomeFeed = () => {
       <Sidebar />
       <Navbar />
 
-      <main className="md:ml-64 pb-20 md:pb-8 pt-4 px-3 sm:px-4 flex justify-center">
-        <div className="w-full max-w-lg">
-          {/* Feed Header */}
-          <div className="flex items-center justify-between mb-4 px-1">
-            <h1 className="text-sm font-semibold uppercase tracking-wider text-gray-500">
-              Home Feed
-            </h1>
-            <button
-              onClick={() => {
-                setRefreshing(true);
-                fetchFeed();
-              }}
-              className="flex items-center space-x-1 text-xs text-instagram-secondary hover:text-black font-medium transition-colors"
-              title="Refresh feed"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-              <span>Refresh</span>
-            </button>
+      <main className="md:ml-64 pb-20 md:pb-8 pt-5 px-3 sm:px-6 flex justify-center">
+        <div className="flex justify-center w-full max-w-5xl">
+          {/* Main Feed Column */}
+          <div className="w-full max-w-lg">
+            {/* Top Stories Tray */}
+            <StoriesBar />
+
+            {/* Feed Refresh & Subtitle */}
+            <div className="flex items-center justify-between mb-3 px-1">
+              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                Recent Posts
+              </span>
+              <button
+                onClick={() => {
+                  setRefreshing(true);
+                  fetchFeed();
+                }}
+                className="flex items-center space-x-1.5 text-xs text-instagram-secondary hover:text-black font-medium transition-colors"
+                title="Refresh feed"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-instagram-blue' : ''}`} />
+                <span>Refresh</span>
+              </button>
+            </div>
+
+            <ErrorMessage message={error} onRetry={fetchFeed} />
+
+            {loading ? (
+              <LoadingSpinner size="large" text="Loading posts..." />
+            ) : posts.length === 0 ? (
+              <div className="bg-white border border-instagram-border rounded-2xl p-10 text-center shadow-sm">
+                <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-4 border border-gray-100">
+                  <Camera className="w-8 h-8 text-gray-400" />
+                </div>
+                <h3 className="text-base font-semibold text-gray-900 mb-1">No Posts Yet</h3>
+                <p className="text-xs text-gray-500 max-w-xs mx-auto mb-4">
+                  Follow friends or share your first photo to start filling your feed.
+                </p>
+              </div>
+            ) : (
+              posts.map((post) => (
+                <PostCard
+                  key={post._id || post.id}
+                  post={post}
+                  onLikeToggle={handleLikeToggle}
+                  onAddComment={handleAddComment}
+                  onDeletePost={handleDeletePost}
+                />
+              ))
+            )}
           </div>
 
-          <ErrorMessage message={error} onRetry={fetchFeed} />
-
-          {loading ? (
-            <LoadingSpinner size="large" text="Loading posts..." />
-          ) : posts.length === 0 ? (
-            <div className="bg-white border border-instagram-border rounded-xl p-8 text-center shadow-sm">
-              <Camera className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <h3 className="text-base font-semibold text-gray-800 mb-1">No Posts Yet</h3>
-              <p className="text-xs text-instagram-secondary mb-4">
-                Follow users or upload your first photo to see moments in your feed.
-              </p>
-            </div>
-          ) : (
-            posts.map((post) => (
-              <PostCard
-                key={post._id || post.id}
-                post={post}
-                onLikeToggle={handleLikeToggle}
-                onAddComment={handleAddComment}
-                onDeletePost={handleDeletePost}
-              />
-            ))
-          )}
+          {/* Right Sidebar Suggestions (Desktop Only) */}
+          <RightSidebar />
         </div>
       </main>
     </div>
@@ -162,4 +175,3 @@ const HomeFeed = () => {
 };
 
 export default HomeFeed;
-

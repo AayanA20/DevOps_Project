@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Camera, Lock, Mail, User, FileText, Image as ImageIcon } from 'lucide-react';
+import { Camera, Lock, Mail, User, FileText, Image as ImageIcon, ArrowRight } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import ErrorMessage from '../components/ErrorMessage';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -54,23 +54,27 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-instagram-bg flex flex-col justify-center items-center px-4 py-8">
-      <div className="w-full max-w-sm space-y-4">
+    <div className="min-h-screen bg-gradient-to-br from-rose-50/40 via-amber-50/30 to-purple-50/40 flex flex-col justify-center items-center px-4 py-10 relative overflow-hidden">
+      {/* Decorative ambient background glows */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[480px] h-[480px] bg-gradient-to-tr from-pink-400/15 via-rose-400/15 to-amber-300/15 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="w-full max-w-sm space-y-4 relative z-10">
         {/* Main Card */}
-        <div className="bg-white border border-instagram-border p-8 rounded-xl shadow-sm text-center">
+        <div className="bg-white/95 backdrop-blur-xl border border-gray-200/90 p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] text-center transition-all">
           {/* Logo */}
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 flex items-center justify-center text-white shadow">
-              <Camera className="w-6 h-6" />
+          <div className="flex flex-col items-center justify-center mb-5">
+            <div className="w-14 h-14 rounded-2xl story-ring p-[2.5px] shadow-[0_6px_20px_rgba(225,48,108,0.35)] mb-3">
+              <div className="w-full h-full bg-white rounded-[13px] flex items-center justify-center">
+                <Camera className="w-7 h-7 text-instagram-storyPink" />
+              </div>
             </div>
             <h1 className="text-2xl font-bold font-serif text-gray-900 tracking-tight">
               Mini Instagram
             </h1>
+            <p className="text-xs text-gray-500 mt-1 max-w-[240px]">
+              Sign up to see photos and videos from your friends and creators.
+            </p>
           </div>
-
-          <p className="text-xs text-instagram-secondary mb-6 font-medium">
-            Sign up to see photos and videos from your friends.
-          </p>
 
           <ErrorMessage message={error} />
 
@@ -84,9 +88,9 @@ const Signup = () => {
                   placeholder="Username"
                   value={formData.username}
                   onChange={handleChange}
-                  className="w-full pl-9 pr-3 py-2 text-xs bg-gray-50 border border-instagram-border rounded-md focus:bg-white focus:outline-none focus:border-gray-400 text-gray-800 placeholder-gray-400"
+                  className="w-full pl-10 pr-3.5 py-2.5 text-xs bg-gray-50/90 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:border-instagram-blue focus:ring-2 focus:ring-blue-100 text-gray-800 placeholder-gray-400 transition-all"
                 />
-                <User className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
+                <User className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
               </div>
             </div>
 
@@ -99,9 +103,9 @@ const Signup = () => {
                   placeholder="Email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full pl-9 pr-3 py-2 text-xs bg-gray-50 border border-instagram-border rounded-md focus:bg-white focus:outline-none focus:border-gray-400 text-gray-800 placeholder-gray-400"
+                  className="w-full pl-10 pr-3.5 py-2.5 text-xs bg-gray-50/90 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:border-instagram-blue focus:ring-2 focus:ring-blue-100 text-gray-800 placeholder-gray-400 transition-all"
                 />
-                <Mail className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
+                <Mail className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
               </div>
             </div>
 
@@ -114,9 +118,9 @@ const Signup = () => {
                   placeholder="Password (min 6 chars)"
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full pl-9 pr-3 py-2 text-xs bg-gray-50 border border-instagram-border rounded-md focus:bg-white focus:outline-none focus:border-gray-400 text-gray-800 placeholder-gray-400"
+                  className="w-full pl-10 pr-3.5 py-2.5 text-xs bg-gray-50/90 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:border-instagram-blue focus:ring-2 focus:ring-blue-100 text-gray-800 placeholder-gray-400 transition-all"
                 />
-                <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
+                <Lock className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
               </div>
             </div>
 
@@ -128,9 +132,9 @@ const Signup = () => {
                   placeholder="Bio (optional)"
                   value={formData.bio}
                   onChange={handleChange}
-                  className="w-full pl-9 pr-3 py-2 text-xs bg-gray-50 border border-instagram-border rounded-md focus:bg-white focus:outline-none focus:border-gray-400 text-gray-800 placeholder-gray-400"
+                  className="w-full pl-10 pr-3.5 py-2.5 text-xs bg-gray-50/90 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:border-instagram-blue focus:ring-2 focus:ring-blue-100 text-gray-800 placeholder-gray-400 transition-all"
                 />
-                <FileText className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
+                <FileText className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
               </div>
             </div>
 
@@ -142,24 +146,31 @@ const Signup = () => {
                   placeholder="Profile Picture URL (optional)"
                   value={formData.profilePicture}
                   onChange={handleChange}
-                  className="w-full pl-9 pr-3 py-2 text-xs bg-gray-50 border border-instagram-border rounded-md focus:bg-white focus:outline-none focus:border-gray-400 text-gray-800 placeholder-gray-400"
+                  className="w-full pl-10 pr-3.5 py-2.5 text-xs bg-gray-50/90 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:border-instagram-blue focus:ring-2 focus:ring-blue-100 text-gray-800 placeholder-gray-400 transition-all"
                 />
-                <ImageIcon className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
+                <ImageIcon className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
               </div>
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2 px-4 bg-instagram-blue hover:bg-instagram-hoverBlue disabled:bg-blue-300 text-white font-semibold text-xs rounded-md shadow-sm transition-colors flex items-center justify-center mt-2"
+              className="w-full py-2.5 px-4 bg-instagram-blue hover:bg-instagram-hoverBlue disabled:bg-blue-300 text-white font-semibold text-xs rounded-xl shadow-sm transition-all duration-150 flex items-center justify-center space-x-1.5 active:scale-[0.99] mt-3"
             >
-              {loading ? <LoadingSpinner size="small" text="" /> : 'Sign Up'}
+              {loading ? (
+                <LoadingSpinner size="small" text="" />
+              ) : (
+                <>
+                  <span>Create Account</span>
+                  <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                </>
+              )}
             </button>
           </form>
         </div>
 
         {/* Switch to Login Card */}
-        <div className="bg-white border border-instagram-border p-4 rounded-xl text-center text-xs">
+        <div className="bg-white/95 backdrop-blur-xl border border-gray-200/90 p-4 rounded-2xl text-center text-xs shadow-sm">
           <span className="text-gray-600">Have an account? </span>
           <Link to="/login" className="font-semibold text-instagram-blue hover:underline">
             Log in
@@ -171,4 +182,3 @@ const Signup = () => {
 };
 
 export default Signup;
-
