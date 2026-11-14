@@ -26,8 +26,8 @@ const UserProfile = () => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isRequestsOpen, setIsRequestsOpen] = useState(false);
 
-  const fetchProfile = useCallback(async () => {
-    setLoading(true);
+  const fetchProfile = useCallback(async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
     setError('');
     try {
       const targetId = id || currentUser?._id || currentUser?.id;
@@ -86,7 +86,7 @@ const UserProfile = () => {
         setError(err.response?.data?.message || 'Failed to load user profile');
       }
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   }, [id, currentUser]);
 
@@ -247,7 +247,12 @@ const UserProfile = () => {
                 isOpen={isRequestsOpen}
                 onClose={() => setIsRequestsOpen(false)}
                 requests={profileUser?.followRequests || []}
-                onActionCompleted={fetchProfile}
+                onActionCompleted={(updatedUser) => {
+                  if (updatedUser) {
+                    setProfileUser((prev) => ({ ...prev, ...updatedUser }));
+                  }
+                  fetchProfile(true);
+                }}
               />
             </>
           ) : (

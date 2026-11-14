@@ -252,44 +252,58 @@ export const respondFollowRequest = async (req, res, next) => {
       return res.status(400).json({ message: "Action must be either 'approve' or 'reject'" });
     }
 
-    const currentUser = await User.findById(currentUserId);
     const requester = await User.findById(requesterId);
-
     if (!requester) {
       return res.status(404).json({ message: 'Requester user not found' });
     }
 
-    // Remove from follow requests list
-    currentUser.followRequests = (currentUser.followRequests || []).filter(
-      (id) => id.toString() !== requesterId.toString()
-    );
-
     if (action === 'approve') {
-      // Add requester to currentUser followers
-      currentUser.followers = currentUser.followers || [];
-      if (!currentUser.followers.some((id) => id.toString() === requesterId.toString())) {
-        currentUser.followers.push(requesterId);
-      }
+      // 1. Remove from currentUser followRequests & add to currentUser followers atomically
+      const updatedCurrentUser = await User.findByIdAndUpdate(
+        currentUserId,
+        {
+          $pull: { followRequests: requesterId },
+          $addToSet: { followers: requesterId },
+        },
+        { new: true }
+      )
+        .select('-password')
+        .populate('followers', 'username profilePicture')
+        .populate('following', 'username profilePicture')
+        .populate('followRequests', 'username profilePicture bio');
 
-      // Add currentUser to requester's following list
-      requester.following = requester.following || [];
-      if (!requester.following.some((id) => id.toString() === currentUserId.toString())) {
-        requester.following.push(currentUserId);
-      }
+      // 2. Add currentUser to requester's following atomically
+      await User.findByIdAndUpdate(requesterId, {
+        $addToSet: { following: currentUserId },
+      });
 
-      await requester.save();
+      return res.status(200).json({
+        success: true,
+        action: 'approve',
+        message: `Approved ${requester.username}'s follow request`,
+        user: updatedCurrentUser,
+      });
+    } else {
+      // Reject: Remove from followRequests atomically
+      const updatedCurrentUser = await User.findByIdAndUpdate(
+        currentUserId,
+        {
+          $pull: { followRequests: requesterId },
+        },
+        { new: true }
+      )
+        .select('-password')
+        .populate('followers', 'username profilePicture')
+        .populate('following', 'username profilePicture')
+        .populate('followRequests', 'username profilePicture bio');
+
+      return res.status(200).json({
+        success: true,
+        action: 'reject',
+        message: `Rejected ${requester.username}'s follow request`,
+        user: updatedCurrentUser,
+      });
     }
-
-    await currentUser.save();
-
-    return res.status(200).json({
-      success: true,
-      action,
-      message:
-        action === 'approve'
-          ? `Approved ${requester.username}'s follow request`
-          : `Rejected ${requester.username}'s follow request`,
-    });
   } catch (error) {
     next(error);
   }
