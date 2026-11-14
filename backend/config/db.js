@@ -8,37 +8,48 @@ try {
   // Ignore in environments where custom DNS servers cannot be set
 }
 
+// Globally disable command buffering so queries don't hang for 10,000ms if connection is re-establishing
+mongoose.set('bufferCommands', false);
+
 /**
  * Global cache for Mongoose connection across serverless invocations (AWS Lambda / Vercel)
  */
-let cachedConnection = null;
+let cached = global.mongoose;
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
 
 const connectDB = async () => {
-  // If connection is already active or connecting, reuse it immediately
-  if (mongoose.connection.readyState >= 1) {
-    return mongoose.connection;
+  if (cached.conn && mongoose.connection.readyState === 1) {
+    return cached.conn;
   }
 
-  if (cachedConnection) {
-    return cachedConnection;
-  }
+  const mongoURI =
+    process.env.MONGO_URI ||
+    'mongodb+srv://AayanAnsari:Aayan123@cluster1.jgk7yf7.mongodb.net/mini-instagram?retryWrites=true&w=majority';
 
-  const mongoURI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/mini-instagram';
+  if (!cached.promise || mongoose.connection.readyState === 0) {
+    const opts = {
+      bufferCommands: false,
+      serverSelectionTimeoutMS: 10000,
+      connectTimeoutMS: 10000,
+      maxPoolSize: 10,
+    };
+
+    cached.promise = mongoose.connect(mongoURI, opts).then((m) => {
+      console.log(`[MongoDB Connected]: ${m.connection.host}`);
+      return m;
+    });
+  }
 
   try {
-    cachedConnection = await mongoose.connect(mongoURI, {
-      serverSelectionTimeoutMS: 5000,
-      bufferCommands: false, // Disable Mongoose buffering for serverless functions
-    });
-    console.log(`[MongoDB Connected]: ${cachedConnection.connection.host}`);
-    return cachedConnection;
-  } catch (error) {
-    console.error(`[MongoDB Connection Error]: ${error.message}`);
-    // Only exit in standalone container or non-serverless mode
-    if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
-      process.exit(1);
-    }
-    throw error;
+    cached.conn = await cached.promise;
+    return cached.conn;
+  } catch (e) {
+    cached.promise = null;
+    cached.conn = null;
+    console.error(`[MongoDB Connection Error]: ${e.message}`);
+    throw e;
   }
 };
 

@@ -6,16 +6,21 @@ import connectDB from '../backend/config/db.js';
  * Wraps the Express application for event-driven serverless execution.
  */
 export default async function handler(req, res) {
-  // Ensure database connection is active or pooled
+  // Ensure database connection is active or pooled before processing request
   try {
-    if (process.env.MONGO_URI) {
-      await connectDB();
-    }
+    await connectDB();
   } catch (error) {
-    console.error('Failed to connect to database in serverless function:', error.message);
+    console.error('Database connection error in serverless handler:', error.message);
+    // If an API request requires database and connection failed, return 503 early
+    if (req.url && (req.url.startsWith('/api') || req.url.startsWith('/api/v1')) && !req.url.includes('/health')) {
+      return res.status(503).json({
+        success: false,
+        message: 'Database connection error. Please try again in a moment.',
+        error: error.message,
+      });
+    }
   }
 
   // Forward request to Express application
   return app(req, res);
 }
-
