@@ -1,8 +1,26 @@
 import React from 'react';
-import { UserPlus, UserCheck, Calendar, Sparkles, CheckCircle2 } from 'lucide-react';
+import {
+  UserPlus,
+  UserCheck,
+  Calendar,
+  CheckCircle2,
+  Lock,
+  Globe,
+  Settings,
+  Clock,
+  Bell,
+} from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
-const ProfileHeader = ({ profileUser, postsCount = 0, isFollowing, onFollowToggle }) => {
+const ProfileHeader = ({
+  profileUser,
+  postsCount = 0,
+  isFollowing,
+  hasRequested,
+  onFollowToggle,
+  onEditProfile,
+  onViewRequests,
+}) => {
   const { user: currentUser } = useAuth();
   const currentUserId = currentUser?._id || currentUser?.id;
   const profileId = profileUser?._id || profileUser?.id;
@@ -10,6 +28,8 @@ const ProfileHeader = ({ profileUser, postsCount = 0, isFollowing, onFollowToggl
 
   const followersCount = (profileUser?.followers && profileUser.followers.length) || 0;
   const followingCount = (profileUser?.following && profileUser.following.length) || 0;
+  const followRequestsCount = (profileUser?.followRequests && profileUser.followRequests.length) || 0;
+  const isPrivate = Boolean(profileUser?.isPrivate);
 
   const joinDate = profileUser?.createdAt
     ? new Date(profileUser.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
@@ -42,16 +62,47 @@ const ProfileHeader = ({ profileUser, postsCount = 0, isFollowing, onFollowToggl
               <CheckCircle2 className="w-4 h-4 text-instagram-blue fill-blue-50" />
             </div>
 
+            {/* Privacy Badge */}
+            <span
+              className={`inline-flex items-center space-x-1 text-[11px] font-semibold px-2.5 py-1 rounded-full border ${
+                isPrivate
+                  ? 'bg-purple-50 text-purple-700 border-purple-200'
+                  : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+              }`}
+            >
+              {isPrivate ? <Lock className="w-3 h-3" /> : <Globe className="w-3 h-3" />}
+              <span>{isPrivate ? 'Private' : 'Public'}</span>
+            </span>
+
+            {/* Actions: Owner Edit / Follower Actions */}
             {isMe ? (
-              <span className="text-xs px-3 py-1.5 bg-gray-100 text-gray-800 font-semibold rounded-lg border border-gray-200">
-                Your Account
-              </span>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={onEditProfile}
+                  className="flex items-center space-x-1.5 px-4 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-semibold rounded-lg border border-gray-300 transition-colors shadow-sm"
+                >
+                  <Settings className="w-3.5 h-3.5" />
+                  <span>Edit Profile</span>
+                </button>
+
+                {followRequestsCount > 0 && (
+                  <button
+                    onClick={onViewRequests}
+                    className="flex items-center space-x-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-lg border border-rose-200 transition-colors animate-pulse"
+                  >
+                    <Bell className="w-3.5 h-3.5 text-rose-600" />
+                    <span>{followRequestsCount} Request{followRequestsCount > 1 ? 's' : ''}</span>
+                  </button>
+                )}
+              </div>
             ) : (
               <button
                 onClick={onFollowToggle}
                 className={`flex items-center space-x-1 px-5 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition-all duration-150 ${
                   isFollowing
                     ? 'bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300'
+                    : hasRequested
+                    ? 'bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300'
                     : 'bg-instagram-blue hover:bg-instagram-hoverBlue text-white active:scale-95'
                 }`}
               >
@@ -59,6 +110,11 @@ const ProfileHeader = ({ profileUser, postsCount = 0, isFollowing, onFollowToggl
                   <>
                     <UserCheck className="w-3.5 h-3.5 mr-1" />
                     <span>Following</span>
+                  </>
+                ) : hasRequested ? (
+                  <>
+                    <Clock className="w-3.5 h-3.5 mr-1 text-amber-600" />
+                    <span>Requested</span>
                   </>
                 ) : (
                   <>
@@ -73,13 +129,16 @@ const ProfileHeader = ({ profileUser, postsCount = 0, isFollowing, onFollowToggl
           {/* Stats Bar */}
           <div className="flex justify-center sm:justify-start space-x-7 mb-4 text-sm text-gray-800">
             <div>
-              <span className="font-bold text-black">{postsCount}</span> <span className="text-gray-600">posts</span>
+              <span className="font-bold text-black">{postsCount}</span>{' '}
+              <span className="text-gray-600">posts</span>
             </div>
             <div>
-              <span className="font-bold text-black">{followersCount}</span> <span className="text-gray-600">followers</span>
+              <span className="font-bold text-black">{followersCount}</span>{' '}
+              <span className="text-gray-600">followers</span>
             </div>
             <div>
-              <span className="font-bold text-black">{followingCount}</span> <span className="text-gray-600">following</span>
+              <span className="font-bold text-black">{followingCount}</span>{' '}
+              <span className="text-gray-600">following</span>
             </div>
           </div>
 

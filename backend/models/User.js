@@ -42,6 +42,16 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isPrivate: {
+      type: Boolean,
+      default: false,
+    },
+    followRequests: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
     refreshTokens: [
       {
         type: String,

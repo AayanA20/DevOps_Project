@@ -2,35 +2,108 @@ import User from '../models/User.js';
 import Post from '../models/Post.js';
 import { generateUploadSignature } from '../config/cloudinary.js';
 
-// @desc    Get user profile by ID with their posts
+// @desc    Get user profile by ID with their posts (respects private account privacy)
 // @route   GET /api/users/:id
-// @access  Public
+// @access  Public (with optional user context)
 export const getUserProfile = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id)
       .select('-password')
       .populate('followers', 'username profilePicture')
-      .populate('following', 'username profilePicture');
+      .populate('following', 'username profilePicture')
+      .populate('followRequests', 'username profilePicture bio');
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const posts = await Post.find({ user: user._id })
-      .sort({ createdAt: -1 })
-      .populate('user', 'username profilePicture');
+    const currentUserId = req.user?._id || req.user?.id;
+    const isMe = currentUserId && user._id.toString() === currentUserId.toString();
+
+    const isFollowing =
+      currentUserId &&
+      (user.followers || []).some(
+        (f) => (f._id || f).toString() === currentUserId.toString()
+      );
+
+    const hasRequested =
+      currentUserId &&
+      (user.followRequests || []).some(
+        (r) => (r._id || r).toString() === currentUserId.toString()
+      );
+
+    // Privacy Gate: If account is private and viewer is neither owner nor approved follower
+    const isPrivate = Boolean(user.isPrivate);
+    const canViewPosts = !isPrivate || isMe || isFollowing;
+
+    let posts = [];
+    if (canViewPosts) {
+      posts = await Post.find({ user: user._id })
+        .sort({ createdAt: -1 })
+        .populate('user', 'username profilePicture');
+    }
 
     return res.status(200).json({
       success: true,
       user,
       posts,
+      isFollowing: Boolean(isFollowing),
+      hasRequested: Boolean(hasRequested),
+      canViewPosts,
+      isPrivate,
     });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Follow a user
+// @desc    Update user profile (bio, profilePicture, isPrivate)
+// @route   PUT /api/users/profile
+// @access  Private
+export const updateProfile = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const { bio, profilePicture, isPrivate } = req.body;
+
+    if (typeof bio !== 'undefined') {
+      user.bio = bio;
+    }
+
+    if (typeof profilePicture !== 'undefined') {
+      user.profilePicture = profilePicture;
+    }
+
+    if (typeof isPrivate !== 'undefined') {
+      user.isPrivate = Boolean(isPrivate);
+    }
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+      user: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        bio: user.bio,
+        profilePicture: user.profilePicture,
+        isPrivate: user.isPrivate,
+        followers: user.followers,
+        following: user.following,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Follow a user (immediate for public accounts, request-based for private accounts)
 // @route   POST /api/users/:id/follow
 // @access  Private
 export const followUser = async (req, res, next) => {
@@ -50,13 +123,42 @@ export const followUser = async (req, res, next) => {
     }
 
     // Check if already following
-    const isAlreadyFollowing = currentUser.following.some(
+    const isAlreadyFollowing = (currentUser.following || []).some(
       (id) => id.toString() === targetUserId.toString()
     );
 
     if (isAlreadyFollowing) {
       return res.status(400).json({ message: 'You are already following this user' });
     }
+
+    // If target account is private, send follow request for owner's approval
+    if (targetUser.isPrivate) {
+      const alreadyRequested = (targetUser.followRequests || []).some(
+        (id) => id.toString() === currentUserId.toString()
+      );
+
+      if (alreadyRequested) {
+        return res.status(200).json({
+          success: true,
+          status: 'requested',
+          message: 'Follow request is already pending approval',
+        });
+      }
+
+      targetUser.followRequests = targetUser.followRequests || [];
+      targetUser.followRequests.push(currentUserId);
+      await targetUser.save();
+
+      return res.status(200).json({
+        success: true,
+        status: 'requested',
+        message: `Follow request sent to ${targetUser.username}. Awaiting approval.`,
+      });
+    }
+
+    // If target account is public, directly follow
+    currentUser.following = currentUser.following || [];
+    targetUser.followers = targetUser.followers || [];
 
     currentUser.following.push(targetUserId);
     targetUser.followers.push(currentUserId);
@@ -66,6 +168,7 @@ export const followUser = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
+      status: 'following',
       message: `You are now following ${targetUser.username}`,
     });
   } catch (error) {
@@ -73,7 +176,7 @@ export const followUser = async (req, res, next) => {
   }
 };
 
-// @desc    Unfollow a user
+// @desc    Unfollow a user or cancel pending follow request
 // @route   DELETE /api/users/:id/follow
 // @access  Private
 export const unfollowUser = async (req, res, next) => {
@@ -92,10 +195,15 @@ export const unfollowUser = async (req, res, next) => {
       return res.status(404).json({ message: 'Target user not found' });
     }
 
-    currentUser.following = currentUser.following.filter(
+    currentUser.following = (currentUser.following || []).filter(
       (id) => id.toString() !== targetUserId.toString()
     );
-    targetUser.followers = targetUser.followers.filter(
+    targetUser.followers = (targetUser.followers || []).filter(
+      (id) => id.toString() !== currentUserId.toString()
+    );
+
+    // Also remove from pending requests if user cancels request
+    targetUser.followRequests = (targetUser.followRequests || []).filter(
       (id) => id.toString() !== currentUserId.toString()
     );
 
@@ -104,7 +212,83 @@ export const unfollowUser = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
-      message: `You have unfollowed ${targetUser.username}`,
+      status: 'unfollowed',
+      message: `Unfollowed or cancelled request for ${targetUser.username}`,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get pending follow requests for the authenticated user
+// @route   GET /api/users/requests
+// @access  Private
+export const getFollowRequests = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id).populate(
+      'followRequests',
+      'username profilePicture bio email'
+    );
+
+    return res.status(200).json({
+      success: true,
+      requests: user.followRequests || [],
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Approve or reject a pending follow request
+// @route   POST /api/users/requests/:requesterId
+// @access  Private
+export const respondFollowRequest = async (req, res, next) => {
+  try {
+    const { action } = req.body; // 'approve' or 'reject'
+    const { requesterId } = req.params;
+    const currentUserId = req.user._id;
+
+    if (!['approve', 'reject'].includes(action)) {
+      return res.status(400).json({ message: "Action must be either 'approve' or 'reject'" });
+    }
+
+    const currentUser = await User.findById(currentUserId);
+    const requester = await User.findById(requesterId);
+
+    if (!requester) {
+      return res.status(404).json({ message: 'Requester user not found' });
+    }
+
+    // Remove from follow requests list
+    currentUser.followRequests = (currentUser.followRequests || []).filter(
+      (id) => id.toString() !== requesterId.toString()
+    );
+
+    if (action === 'approve') {
+      // Add requester to currentUser followers
+      currentUser.followers = currentUser.followers || [];
+      if (!currentUser.followers.some((id) => id.toString() === requesterId.toString())) {
+        currentUser.followers.push(requesterId);
+      }
+
+      // Add currentUser to requester's following list
+      requester.following = requester.following || [];
+      if (!requester.following.some((id) => id.toString() === currentUserId.toString())) {
+        requester.following.push(currentUserId);
+      }
+
+      await requester.save();
+    }
+
+    await currentUser.save();
+
+    return res.status(200).json({
+      success: true,
+      action,
+      message:
+        action === 'approve'
+          ? `Approved ${requester.username}'s follow request`
+          : `Rejected ${requester.username}'s follow request`,
     });
   } catch (error) {
     next(error);
@@ -147,4 +331,3 @@ export const getUploadSignature = async (req, res, next) => {
     next(error);
   }
 };
-
