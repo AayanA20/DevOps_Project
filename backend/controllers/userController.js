@@ -9,8 +9,8 @@ export const getUserProfile = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id)
       .select('-password')
-      .populate('followers', 'username profilePicture')
-      .populate('following', 'username profilePicture')
+      .populate('followers', 'username profilePicture bio followers following isPrivate')
+      .populate('following', 'username profilePicture bio followers following isPrivate')
       .populate('followRequests', 'username profilePicture bio');
 
     if (!user) {
@@ -340,6 +340,74 @@ export const getUploadSignature = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       ...signatureData,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get user followers list
+// @route   GET /api/users/:id/followers
+// @access  Public (respects private account privacy)
+export const getUserFollowers = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.id)
+      .select('username isPrivate followers')
+      .populate('followers', 'username profilePicture bio followers following isPrivate');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const currentUserId = req.user?._id || req.user?.id;
+    const isMe = currentUserId && user._id.toString() === currentUserId.toString();
+    const isFollowing =
+      currentUserId &&
+      (user.followers || []).some(
+        (f) => (f._id || f).toString() === currentUserId.toString()
+      );
+
+    if (user.isPrivate && !isMe && !isFollowing) {
+      return res.status(403).json({ message: 'This account is private', followers: [] });
+    }
+
+    return res.status(200).json({
+      success: true,
+      followers: user.followers || [],
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get user following list
+// @route   GET /api/users/:id/following
+// @access  Public (respects private account privacy)
+export const getUserFollowing = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.id)
+      .select('username isPrivate following followers')
+      .populate('following', 'username profilePicture bio followers following isPrivate');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const currentUserId = req.user?._id || req.user?.id;
+    const isMe = currentUserId && user._id.toString() === currentUserId.toString();
+    const isFollowing =
+      currentUserId &&
+      (user.followers || []).some(
+        (f) => (f._id || f).toString() === currentUserId.toString()
+      );
+
+    if (user.isPrivate && !isMe && !isFollowing) {
+      return res.status(403).json({ message: 'This account is private', following: [] });
+    }
+
+    return res.status(200).json({
+      success: true,
+      following: user.following || [],
     });
   } catch (error) {
     next(error);

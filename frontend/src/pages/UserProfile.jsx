@@ -6,6 +6,7 @@ import Navbar from '../components/Navbar';
 import ProfileHeader from '../components/ProfileHeader';
 import EditProfileModal from '../components/EditProfileModal';
 import FollowRequestsModal from '../components/FollowRequestsModal';
+import FollowersListModal from '../components/FollowersListModal';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorMessage from '../components/ErrorMessage';
 import { userService } from '../services/userService';
@@ -25,6 +26,8 @@ const UserProfile = () => {
   const [isPrivate, setIsPrivate] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isRequestsOpen, setIsRequestsOpen] = useState(false);
+  const [isFollowListOpen, setIsFollowListOpen] = useState(false);
+  const [followListTab, setFollowListTab] = useState('followers');
 
   const fetchProfile = useCallback(async (isSilent = false) => {
     if (!isSilent) setLoading(true);
@@ -159,6 +162,10 @@ const UserProfile = () => {
                 onFollowToggle={handleFollowToggle}
                 onEditProfile={() => setIsEditOpen(true)}
                 onViewRequests={() => setIsRequestsOpen(true)}
+                onOpenFollowList={(tab) => {
+                  setFollowListTab(tab);
+                  setIsFollowListOpen(true);
+                }}
               />
 
               {/* Private Account Access Gate */}
@@ -253,6 +260,18 @@ const UserProfile = () => {
                   }
                   fetchProfile(true);
                 }}
+              />
+
+              {/* Followers / Following Modal */}
+              <FollowersListModal
+                isOpen={isFollowListOpen}
+                onClose={() => setIsFollowListOpen(false)}
+                initialTab={followListTab}
+                userId={profileUser?._id || profileUser?.id}
+                username={profileUser?.username}
+                initialFollowers={profileUser?.followers || []}
+                initialFollowing={profileUser?.following || []}
+                onFollowChange={() => fetchProfile(true)}
               />
             </>
           ) : (

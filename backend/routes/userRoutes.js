@@ -8,6 +8,8 @@ import {
   respondFollowRequest,
   getSuggestedUsers,
   getUploadSignature,
+  getUserFollowers,
+  getUserFollowing,
 } from '../controllers/userController.js';
 import { protect, optionalProtect } from '../middleware/authMiddleware.js';
 
@@ -20,11 +22,14 @@ router.post('/requests/:requesterId', protect, respondFollowRequest);
 router.get('/suggested', optionalProtect, getSuggestedUsers);
 router.get('/upload-signature', protect, getUploadSignature);
 
-// Parametric routes
-router.get('/:id', optionalProtect, getUserProfile);
+// Parametric sub-routes
+router.get('/:id/followers', optionalProtect, getUserFollowers);
+router.get('/:id/following', optionalProtect, getUserFollowing);
 
 router.route('/:id/follow')
   .post(protect, followUser)
   .delete(protect, unfollowUser);
+
+router.get('/:id', optionalProtect, getUserProfile);
 
 export default router;

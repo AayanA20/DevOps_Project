@@ -46,6 +46,26 @@ export const userService = {
     return response.data;
   },
 
+  getFollowers: async (id) => {
+    try {
+      const response = await api.get(`/users/${id}/followers`);
+      return response.data;
+    } catch {
+      const response = await api.get(`/v1/users/${id}/followers`);
+      return response.data;
+    }
+  },
+
+  getFollowing: async (id) => {
+    try {
+      const response = await api.get(`/users/${id}/following`);
+      return response.data;
+    } catch {
+      const response = await api.get(`/v1/users/${id}/following`);
+      return response.data;
+    }
+  },
+
   getSuggestedUsers: async () => {
     try {
       const response = await api.get('/users/suggested');

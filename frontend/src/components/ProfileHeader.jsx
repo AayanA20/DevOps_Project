@@ -60,6 +60,7 @@ const ProfileHeader = ({
   onFollowToggle,
   onEditProfile,
   onViewRequests,
+  onOpenFollowList,
 }) => {
   const { user: currentUser } = useAuth();
   const [activeHighlight, setActiveHighlight] = useState(null);
@@ -73,6 +74,7 @@ const ProfileHeader = ({
   const followingCount = (profileUser?.following && profileUser.following.length) || 0;
   const followRequestsCount = (profileUser?.followRequests && profileUser.followRequests.length) || 0;
   const isPrivate = Boolean(profileUser?.isPrivate);
+  const canViewNetwork = !isPrivate || isMe || isFollowing;
 
   const joinDate = profileUser?.createdAt
     ? new Date(profileUser.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
@@ -183,14 +185,38 @@ const ProfileHeader = ({
                 <span className="font-bold text-black">{postsCount}</span>{' '}
                 <span className="text-gray-600">posts</span>
               </div>
-              <div>
-                <span className="font-bold text-black">{followersCount}</span>{' '}
-                <span className="text-gray-600">followers</span>
-              </div>
-              <div>
-                <span className="font-bold text-black">{followingCount}</span>{' '}
-                <span className="text-gray-600">following</span>
-              </div>
+              <button
+                type="button"
+                onClick={() => canViewNetwork && onOpenFollowList && onOpenFollowList('followers')}
+                disabled={!canViewNetwork}
+                className={`transition-opacity text-left focus:outline-none ${
+                  canViewNetwork
+                    ? 'cursor-pointer hover:opacity-75 group'
+                    : 'cursor-not-allowed opacity-60'
+                }`}
+                title={canViewNetwork ? 'View followers' : 'Followers hidden (private account)'}
+              >
+                <span className="font-bold text-black group-hover:text-instagram-blue transition-colors">
+                  {followersCount}
+                </span>{' '}
+                <span className="text-gray-600 group-hover:text-black transition-colors">followers</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => canViewNetwork && onOpenFollowList && onOpenFollowList('following')}
+                disabled={!canViewNetwork}
+                className={`transition-opacity text-left focus:outline-none ${
+                  canViewNetwork
+                    ? 'cursor-pointer hover:opacity-75 group'
+                    : 'cursor-not-allowed opacity-60'
+                }`}
+                title={canViewNetwork ? 'View following' : 'Following hidden (private account)'}
+              >
+                <span className="font-bold text-black group-hover:text-instagram-blue transition-colors">
+                  {followingCount}
+                </span>{' '}
+                <span className="text-gray-600 group-hover:text-black transition-colors">following</span>
+              </button>
             </div>
 
             {/* Bio & Details */}
