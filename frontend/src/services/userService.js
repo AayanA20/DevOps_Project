@@ -17,23 +17,33 @@ export const userService = {
   },
 
   followUser: async (id) => {
+    let res;
     try {
       const response = await api.post(`/users/${id}/follow`);
-      return response.data;
+      res = response.data;
     } catch {
       const response = await api.post(`/v1/users/${id}/follow`);
-      return response.data;
+      res = response.data;
     }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('follow-status-changed'));
+    }
+    return res;
   },
 
   unfollowUser: async (id) => {
+    let res;
     try {
       const response = await api.delete(`/users/${id}/follow`);
-      return response.data;
+      res = response.data;
     } catch {
       const response = await api.delete(`/v1/users/${id}/follow`);
-      return response.data;
+      res = response.data;
     }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('follow-status-changed'));
+    }
+    return res;
   },
 
   getFollowRequests: async () => {

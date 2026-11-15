@@ -25,7 +25,7 @@ import { search } from '../controllers/v1/v1SearchController.js';
 import { createStory, getActiveStories, deleteStory } from '../controllers/v1/v1StoryController.js';
 import { getSystemArchitecture } from '../controllers/v1/v1SystemController.js';
 
-import { protect } from '../middleware/authMiddleware.js';
+import { protect, optionalProtect } from '../middleware/authMiddleware.js';
 import { checkIdempotency } from '../middleware/idempotency.js';
 
 const router = express.Router();
@@ -64,7 +64,7 @@ router.delete('/users/:id/follow', protect, unfollowUser);
 router.get('/notifications', protect, getNotifications);
 router.get('/search', search);
 router.post('/stories', protect, createStory);
-router.get('/stories', getActiveStories);
+router.get('/stories', optionalProtect, getActiveStories);
 router.delete('/stories/:id', protect, deleteStory);
 
 // --- System Telemetry & Architecture Specifications ---

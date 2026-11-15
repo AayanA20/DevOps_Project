@@ -4,15 +4,16 @@ import {
   getActiveStories,
   deleteStory,
 } from '../controllers/v1/v1StoryController.js';
-import { protect } from '../middleware/authMiddleware.js';
+import { protect, optionalProtect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
 router.route('/')
-  .get(getActiveStories)
+  .get(optionalProtect, getActiveStories)
   .post(protect, createStory);
 
 router.route('/:id')
   .delete(protect, deleteStory);
 
 export default router;
+

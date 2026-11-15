@@ -1,4 +1,5 @@
 import Story from '../../models/Story.js';
+import User from '../../models/User.js';
 
 // @desc    Create a 24-hour story (Phase 4A)
 // @route   POST /api/v1/stories
@@ -39,14 +40,31 @@ export const createStory = async (req, res, next) => {
   }
 };
 
-// @desc    Get active stories (< 24 hours)
+// @desc    Get active stories (< 24 hours) for followed users and self
 // @route   GET /api/v1/stories
-// @access  Public
+// @access  Public (filtered by followed accounts when authenticated)
 export const getActiveStories = async (req, res, next) => {
   try {
-    const stories = await Story.find({
+    const currentUserId = req.user?._id || req.user?.id;
+
+    let filter = {
       expiresAt: { $gt: new Date() },
-    })
+    };
+
+    if (currentUserId) {
+      // Find current user's following list
+      const currentUser = await User.findById(currentUserId).select('following');
+      const followingIds = (currentUser?.following || []).map((id) =>
+        (id._id || id).toString()
+      );
+
+      // Enforce: only show stories from people the authenticated user follows + their own stories
+      filter.user = { $in: [currentUserId, ...followingIds] };
+    } else {
+      filter.user = { $in: [] };
+    }
+
+    const stories = await Story.find(filter)
       .sort({ createdAt: -1 })
       .populate('user', 'username profilePicture');
 

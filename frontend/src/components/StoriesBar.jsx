@@ -4,63 +4,6 @@ import { useAuth } from '../hooks/useAuth';
 import { storyService } from '../services/storyService';
 import CreateStoryModal from './CreateStoryModal';
 
-const MOCK_STORIES = [
-  {
-    id: 's1',
-    username: 'travel_diaries',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop',
-    storyMedia: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop',
-    caption: 'Wanderlust dreams by the ocean 🌊🌴',
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    hasUnseen: true,
-  },
-  {
-    id: 's2',
-    username: 'tech_architect',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop',
-    storyMedia: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&auto=format&fit=crop',
-    caption: 'Serverless clusters deployed smoothly 🚀🐳',
-    createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-    hasUnseen: true,
-  },
-  {
-    id: 's3',
-    username: 'nature_lens',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop',
-    storyMedia: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&auto=format&fit=crop',
-    caption: 'Early morning mist in the mountains 🌲🏔️',
-    createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
-    hasUnseen: true,
-  },
-  {
-    id: 's4',
-    username: 'urban_shots',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop',
-    storyMedia: 'https://images.unsplash.com/photo-1477959858617-67f30bc75b82?w=800&auto=format&fit=crop',
-    caption: 'Downtown lights after rain 🏙️✨',
-    createdAt: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
-    hasUnseen: false,
-  },
-  {
-    id: 's5',
-    username: 'foodie_vibes',
-    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&auto=format&fit=crop',
-    storyMedia: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop',
-    caption: 'Artisan bakery treats 🥐☕',
-    createdAt: new Date(Date.now() - 11 * 60 * 60 * 1000).toISOString(),
-    hasUnseen: false,
-  },
-  {
-    id: 's6',
-    username: 'campus_life',
-    avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop',
-    storyMedia: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&auto=format&fit=crop',
-    caption: 'Study session at university library 📚🎓',
-    createdAt: new Date(Date.now() - 14 * 60 * 60 * 1000).toISOString(),
-    hasUnseen: false,
-  },
-];
-
 const StoriesBar = () => {
   const { user } = useAuth();
   const currentUserId = user?._id || user?.id;
@@ -118,32 +61,27 @@ const StoriesBar = () => {
       });
 
       setMyStories(mine);
-
-      // Merge other backend stories with mock stories for rich community feel
-      const mergedOthers = [...others];
-      MOCK_STORIES.forEach((mock) => {
-        if (!mergedOthers.some((o) => o.username === mock.username)) {
-          mergedOthers.push(mock);
-        }
-      });
-
-      setStoriesList(mergedOthers);
+      // Strictly show only stories from followed users
+      setStoriesList(others);
     } catch (err) {
-      console.warn('Could not fetch active stories, fallback to mock stories:', err);
-      setStoriesList(MOCK_STORIES);
+      console.warn('Could not fetch active stories:', err);
+      setMyStories([]);
+      setStoriesList([]);
     }
   }, [currentUserId]);
 
   useEffect(() => {
     fetchStories();
 
-    // Listen for custom story-created event
-    const handleStoryCreated = () => {
+    // Listen for custom story or follow change events
+    const handleRefresh = () => {
       fetchStories();
     };
-    window.addEventListener('story-created', handleStoryCreated);
+    window.addEventListener('story-created', handleRefresh);
+    window.addEventListener('follow-status-changed', handleRefresh);
     return () => {
-      window.removeEventListener('story-created', handleStoryCreated);
+      window.removeEventListener('story-created', handleRefresh);
+      window.removeEventListener('follow-status-changed', handleRefresh);
     };
   }, [fetchStories]);
 
