@@ -3,12 +3,14 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { Home, Compass, PlusSquare, User, LogOut, Camera, Heart, Sparkles } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import CreatePostModal from './CreatePostModal';
+import CreateStoryModal from './CreateStoryModal';
 import { postService } from '../services/postService';
 
 const Sidebar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isStoryModalOpen, setIsStoryModalOpen] = useState(false);
 
   const handleCreatePost = async (postData) => {
     await postService.createPost(postData);
@@ -76,6 +78,18 @@ const Sidebar = () => {
               <span className="text-sm font-semibold text-gray-900">Create</span>
             </button>
 
+            <button
+              onClick={() => setIsStoryModalOpen(true)}
+              className="w-full flex items-center space-x-4 px-3.5 py-3 rounded-xl text-gray-700 hover:bg-gray-50/90 hover:text-black transition-all text-left font-medium group"
+            >
+              <div className="w-6 h-6 rounded-full story-ring p-[1.5px] group-hover:scale-110 transition-transform flex-shrink-0">
+                <div className="w-full h-full bg-white rounded-full flex items-center justify-center">
+                  <Sparkles className="w-3.5 h-3.5 text-instagram-storyPink" />
+                </div>
+              </div>
+              <span className="text-sm font-semibold text-gray-900">Add Story</span>
+            </button>
+
             <NavLink to={`/profile/${currentUserId}`} className={navLinkClass}>
               <div className="w-6 h-6 rounded-full p-[1.5px] story-ring group-hover:scale-110 transition-transform flex-shrink-0">
                 <img
@@ -126,6 +140,16 @@ const Sidebar = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleCreatePost}
+      />
+
+      {/* Add Story Modal */}
+      <CreateStoryModal
+        isOpen={isStoryModalOpen}
+        onClose={() => setIsStoryModalOpen(false)}
+        onStoryCreated={() => {
+          window.dispatchEvent(new Event('story-created'));
+          navigate('/');
+        }}
       />
     </>
   );

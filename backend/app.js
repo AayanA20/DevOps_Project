@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import authRoutes from './routes/authRoutes.js';
 import postRoutes from './routes/postRoutes.js';
 import userRoutes from './routes/userRoutes.js';
+import storyRoutes from './routes/storyRoutes.js';
 import v1Routes from './routes/v1Routes.js';
 import { rateLimiter } from './middleware/rateLimiter.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
@@ -102,6 +103,7 @@ app.use('/api/v1', v1Routes);
 app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/stories', storyRoutes);
 
 // SPA client-side routing fallback (when running in standalone container mode)
 if (fs.existsSync(frontendDist)) {

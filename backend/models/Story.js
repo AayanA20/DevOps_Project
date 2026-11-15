@@ -16,6 +16,11 @@ const storySchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    caption: {
+      type: String,
+      default: '',
+      maxlength: 300,
+    },
     expiresAt: {
       type: Date,
       default: () => new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours

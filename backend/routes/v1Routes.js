@@ -22,7 +22,7 @@ import {
 } from '../controllers/v1/v1UserController.js';
 import { getNotifications } from '../controllers/v1/v1NotificationController.js';
 import { search } from '../controllers/v1/v1SearchController.js';
-import { createStory, getActiveStories } from '../controllers/v1/v1StoryController.js';
+import { createStory, getActiveStories, deleteStory } from '../controllers/v1/v1StoryController.js';
 import { getSystemArchitecture } from '../controllers/v1/v1SystemController.js';
 
 import { protect } from '../middleware/authMiddleware.js';
@@ -65,6 +65,7 @@ router.get('/notifications', protect, getNotifications);
 router.get('/search', search);
 router.post('/stories', protect, createStory);
 router.get('/stories', getActiveStories);
+router.delete('/stories/:id', protect, deleteStory);
 
 // --- System Telemetry & Architecture Specifications ---
 router.get('/system/architecture', getSystemArchitecture);

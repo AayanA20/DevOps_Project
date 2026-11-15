@@ -5,7 +5,7 @@ import Story from '../../models/Story.js';
 // @access  Private
 export const createStory = async (req, res, next) => {
   try {
-    const { mediaUrl, mediaKey } = req.body;
+    const { mediaUrl, mediaKey, caption } = req.body;
 
     if (!mediaUrl && !mediaKey) {
       return res.status(400).json({
@@ -22,6 +22,7 @@ export const createStory = async (req, res, next) => {
       user: req.user._id,
       mediaUrl: mediaUrl || `https://cdn.example.com/${mediaKey}`,
       mediaKey: mediaKey || '',
+      caption: caption ? caption.trim() : '',
     });
 
     const populated = await Story.findById(story._id).populate(
@@ -52,6 +53,33 @@ export const getActiveStories = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       stories,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Delete a story by ID
+// @route   DELETE /api/v1/stories/:id
+// @access  Private
+export const deleteStory = async (req, res, next) => {
+  try {
+    const story = await Story.findById(req.params.id);
+
+    if (!story) {
+      return res.status(404).json({ message: 'Story not found' });
+    }
+
+    // Only story owner can delete
+    if (story.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to delete this story' });
+    }
+
+    await story.deleteOne();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Story deleted successfully',
     });
   } catch (error) {
     next(error);
