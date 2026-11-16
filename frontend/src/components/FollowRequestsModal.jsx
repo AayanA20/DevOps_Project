@@ -11,6 +11,34 @@ const FollowRequestsModal = ({ isOpen, onClose, requests = [], onActionCompleted
     setRequestList(requests);
   }, [requests]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+
+    let isMounted = true;
+    const fetchLatest = async () => {
+      try {
+        const res = await userService.getFollowRequests();
+        if (isMounted && res?.requests) {
+          setRequestList(res.requests);
+        }
+      } catch (err) {
+        console.warn('Could not poll follow requests:', err);
+      }
+    };
+
+    fetchLatest();
+    const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && !document.hidden) {
+        fetchLatest();
+      }
+    }, 3000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleAction = async (requesterId, action) => {

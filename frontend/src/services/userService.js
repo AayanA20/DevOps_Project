@@ -1,4 +1,5 @@
 import api from './api';
+import { broadcastSync } from '../utils/syncManager';
 
 export const userService = {
   getUserProfile: async (id) => {
@@ -13,6 +14,7 @@ export const userService = {
 
   updateProfile: async (profileData) => {
     const response = await api.put('/users/profile', profileData);
+    broadcastSync('PROFILE_UPDATED', response.data);
     return response.data;
   },
 
@@ -25,9 +27,7 @@ export const userService = {
       const response = await api.post(`/v1/users/${id}/follow`);
       res = response.data;
     }
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new Event('follow-status-changed'));
-    }
+    broadcastSync('FOLLOW_REQUEST_SENT', { targetUserId: id, status: res?.status });
     return res;
   },
 
@@ -40,9 +40,7 @@ export const userService = {
       const response = await api.delete(`/v1/users/${id}/follow`);
       res = response.data;
     }
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new Event('follow-status-changed'));
-    }
+    broadcastSync('FOLLOW_STATUS_CHANGED', { targetUserId: id, status: 'unfollowed' });
     return res;
   },
 
@@ -53,6 +51,7 @@ export const userService = {
 
   respondFollowRequest: async (requesterId, action) => {
     const response = await api.post(`/users/requests/${requesterId}`, { action });
+    broadcastSync('FOLLOW_REQUEST_RESOLVED', { requesterId, action, user: response.data?.user });
     return response.data;
   },
 

@@ -1,15 +1,61 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Home, Compass, PlusSquare, User, LogOut, Camera, Heart } from 'lucide-react';
+import { Home, Compass, PlusSquare, User, LogOut, Camera, Heart, Bell } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import CreatePostModal from './CreatePostModal';
 import { postService } from '../services/postService';
+import { userService } from '../services/userService';
+import { subscribeToSync } from '../utils/syncManager';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
   const currentUserId = user?._id || user?.id || '';
+
+  useEffect(() => {
+    if (!user) return;
+
+    let isMounted = true;
+    const checkRequests = async () => {
+      try {
+        const res = await userService.getFollowRequests();
+        if (isMounted) {
+          const count =
+            typeof res?.count !== 'undefined'
+              ? res.count
+              : (res?.requests || []).length;
+          setPendingRequestsCount(count);
+        }
+      } catch {
+        // silent
+      }
+    };
+
+    checkRequests();
+    const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && !document.hidden) {
+        checkRequests();
+      }
+    }, 4000);
+
+    const unsubscribe = subscribeToSync(() => {
+      checkRequests();
+    });
+
+    const handleLocalSync = () => checkRequests();
+    window.addEventListener('follow-requests-updated', handleLocalSync);
+    window.addEventListener('follow-status-changed', handleLocalSync);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+      unsubscribe();
+      window.removeEventListener('follow-requests-updated', handleLocalSync);
+      window.removeEventListener('follow-status-changed', handleLocalSync);
+    };
+  }, [user]);
 
   const handleCreatePost = async (postData) => {
     await postService.createPost(postData);
@@ -37,6 +83,18 @@ const Navbar = () => {
         </NavLink>
 
         <div className="flex items-center space-x-3">
+          {pendingRequestsCount > 0 && (
+            <NavLink
+              to={`/profile/${currentUserId}`}
+              className="relative p-1 text-rose-500 hover:text-rose-600 animate-pulse"
+              title={`${pendingRequestsCount} new follow request${pendingRequestsCount > 1 ? 's' : ''}`}
+            >
+              <Bell className="w-5 h-5 fill-rose-100" />
+              <span className="absolute -top-1 -right-1 min-w-[15px] h-3.5 bg-rose-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1 border border-white">
+                {pendingRequestsCount}
+              </span>
+            </NavLink>
+          )}
           <NavLink to="/explore" className="text-gray-700 hover:text-black p-1">
             <Heart className="w-5 h-5" />
           </NavLink>
@@ -87,7 +145,7 @@ const Navbar = () => {
         <NavLink
           to={`/profile/${currentUserId}`}
           className={({ isActive }) =>
-            `p-1.5 rounded-full transition-transform active:scale-95 ${
+            `p-1.5 rounded-full transition-transform active:scale-95 relative ${
               isActive ? 'ring-2 ring-black' : ''
             }`
           }
@@ -97,6 +155,14 @@ const Navbar = () => {
             alt="Profile"
             className="w-7 h-7 rounded-full object-cover border border-gray-200"
           />
+          {pendingRequestsCount > 0 && (
+            <span
+              className="absolute 0 top-0.5 right-0.5 min-w-[14px] h-3.5 bg-rose-500 text-white text-[9px] font-extrabold rounded-full flex items-center justify-center px-0.5 shadow-sm border border-white animate-pulse"
+              title={`${pendingRequestsCount} new follow request${pendingRequestsCount > 1 ? 's' : ''}`}
+            >
+              {pendingRequestsCount}
+            </span>
+          )}
         </NavLink>
       </nav>
 

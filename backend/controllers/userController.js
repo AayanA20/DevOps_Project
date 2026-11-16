@@ -232,7 +232,8 @@ export const getFollowRequests = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
-      requests: user.followRequests || [],
+      requests: user?.followRequests || [],
+      count: (user?.followRequests || []).length,
     });
   } catch (error) {
     next(error);
@@ -268,8 +269,8 @@ export const respondFollowRequest = async (req, res, next) => {
         { new: true }
       )
         .select('-password')
-        .populate('followers', 'username profilePicture')
-        .populate('following', 'username profilePicture')
+        .populate('followers', 'username profilePicture bio followers following isPrivate')
+        .populate('following', 'username profilePicture bio followers following isPrivate')
         .populate('followRequests', 'username profilePicture bio');
 
       // 2. Add currentUser to requester's following atomically
@@ -293,8 +294,8 @@ export const respondFollowRequest = async (req, res, next) => {
         { new: true }
       )
         .select('-password')
-        .populate('followers', 'username profilePicture')
-        .populate('following', 'username profilePicture')
+        .populate('followers', 'username profilePicture bio followers following isPrivate')
+        .populate('following', 'username profilePicture bio followers following isPrivate')
         .populate('followRequests', 'username profilePicture bio');
 
       return res.status(200).json({

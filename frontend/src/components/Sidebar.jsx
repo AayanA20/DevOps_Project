@@ -1,16 +1,62 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Home, Compass, PlusSquare, User, LogOut, Camera, Heart, Sparkles } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import CreatePostModal from './CreatePostModal';
 import CreateStoryModal from './CreateStoryModal';
 import { postService } from '../services/postService';
+import { userService } from '../services/userService';
+import { subscribeToSync } from '../utils/syncManager';
 
 const Sidebar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isStoryModalOpen, setIsStoryModalOpen] = useState(false);
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+
+    let isMounted = true;
+    const checkRequests = async () => {
+      try {
+        const res = await userService.getFollowRequests();
+        if (isMounted) {
+          const count =
+            typeof res?.count !== 'undefined'
+              ? res.count
+              : (res?.requests || []).length;
+          setPendingRequestsCount(count);
+        }
+      } catch {
+        // silent
+      }
+    };
+
+    checkRequests();
+    const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && !document.hidden) {
+        checkRequests();
+      }
+    }, 4000);
+
+    const unsubscribe = subscribeToSync(() => {
+      checkRequests();
+    });
+
+    const handleLocalSync = () => checkRequests();
+    window.addEventListener('follow-requests-updated', handleLocalSync);
+    window.addEventListener('follow-status-changed', handleLocalSync);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+      unsubscribe();
+      window.removeEventListener('follow-requests-updated', handleLocalSync);
+      window.removeEventListener('follow-status-changed', handleLocalSync);
+    };
+  }, [user]);
 
   const handleCreatePost = async (postData) => {
     await postService.createPost(postData);
@@ -91,12 +137,22 @@ const Sidebar = () => {
             </button>
 
             <NavLink to={`/profile/${currentUserId}`} className={navLinkClass}>
-              <div className="w-6 h-6 rounded-full p-[1.5px] story-ring group-hover:scale-110 transition-transform flex-shrink-0">
-                <img
-                  src={userAvatar}
-                  alt={user?.username || 'Profile'}
-                  className="w-full h-full rounded-full object-cover border border-white"
-                />
+              <div className="relative flex-shrink-0">
+                <div className="w-6 h-6 rounded-full p-[1.5px] story-ring group-hover:scale-110 transition-transform">
+                  <img
+                    src={userAvatar}
+                    alt={user?.username || 'Profile'}
+                    className="w-full h-full rounded-full object-cover border border-white"
+                  />
+                </div>
+                {pendingRequestsCount > 0 && (
+                  <span
+                    className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 bg-rose-500 text-white text-[10px] font-extrabold rounded-full flex items-center justify-center px-1 shadow-md animate-pulse border-2 border-white"
+                    title={`${pendingRequestsCount} follow request${pendingRequestsCount > 1 ? 's' : ''}`}
+                  >
+                    {pendingRequestsCount}
+                  </span>
+                )}
               </div>
               <span className="text-sm">Profile</span>
             </NavLink>

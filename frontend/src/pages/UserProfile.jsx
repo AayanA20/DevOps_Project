@@ -12,6 +12,7 @@ import ErrorMessage from '../components/ErrorMessage';
 import { userService } from '../services/userService';
 import { postService } from '../services/postService';
 import { useAuth } from '../hooks/useAuth';
+import { subscribeToSync } from '../utils/syncManager';
 
 const UserProfile = () => {
   const { id } = useParams();
@@ -94,7 +95,44 @@ const UserProfile = () => {
   }, [id, currentUser]);
 
   useEffect(() => {
+    // Initial fetch
     fetchProfile();
+
+    // 1. Real-time background sync polling every 3 seconds (silent, zero flicker)
+    const pollInterval = setInterval(() => {
+      if (typeof document !== 'undefined' && !document.hidden) {
+        fetchProfile(true);
+      }
+    }, 3000);
+
+    // 2. Immediately refresh when tab gains focus or becomes visible
+    const handleFocus = () => fetchProfile(true);
+    const handleVisibility = () => {
+      if (!document.hidden) fetchProfile(true);
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    // 3. Cross-tab and local event subscriptions
+    const unsubscribeSync = subscribeToSync(() => {
+      fetchProfile(true);
+    });
+
+    const handleLocalSync = () => fetchProfile(true);
+    window.addEventListener('follow-requests-updated', handleLocalSync);
+    window.addEventListener('follow-status-changed', handleLocalSync);
+    window.addEventListener('profile-updated', handleLocalSync);
+
+    return () => {
+      clearInterval(pollInterval);
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      unsubscribeSync();
+      window.removeEventListener('follow-requests-updated', handleLocalSync);
+      window.removeEventListener('follow-status-changed', handleLocalSync);
+      window.removeEventListener('profile-updated', handleLocalSync);
+    };
   }, [fetchProfile]);
 
   const handleFollowToggle = async () => {
