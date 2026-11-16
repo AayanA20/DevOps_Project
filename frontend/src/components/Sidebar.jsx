@@ -89,7 +89,7 @@ const Sidebar = () => {
             </div>
             <div>
               <span className="text-xl font-bold tracking-tight text-gray-900 font-serif block leading-none">
-                Mini Instagram
+                Finsta
               </span>
               <span className="text-[10px] font-semibold text-gray-400 tracking-wider uppercase">
                 Photo Sharing

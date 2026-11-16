@@ -73,3 +73,4 @@ export const subscribeToSync = (callback) => {
     window.removeEventListener('app-sync', handleCustomEvent);
   };
 };
+

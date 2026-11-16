@@ -69,7 +69,7 @@ const Signup = () => {
               </div>
             </div>
             <h1 className="text-2xl font-bold font-serif text-gray-900 tracking-tight">
-              Mini Instagram
+              Finsta
             </h1>
             <p className="text-xs text-gray-500 mt-1 max-w-[240px]">
               Sign up to see photos and videos from your friends and creators.

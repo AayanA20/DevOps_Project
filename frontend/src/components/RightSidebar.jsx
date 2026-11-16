@@ -123,7 +123,7 @@ const RightSidebar = () => {
           About • Help • API • Jobs • Privacy • Terms • Locations
         </p>
         <p className="font-medium text-gray-400">
-          © 2026 MINI INSTAGRAM • UNIVERSITY DEVOPS ASSIGNMENT
+          © 2026 FINSTA • UNIVERSITY DEVOPS ASSIGNMENT
         </p>
       </div>
     </aside>

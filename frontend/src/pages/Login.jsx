@@ -72,7 +72,7 @@ const Login = () => {
               </div>
             </div>
             <h1 className="text-2xl font-bold font-serif text-gray-900 tracking-tight">
-              Mini Instagram
+              Finsta
             </h1>
             <p className="text-xs text-gray-500 mt-1 max-w-[240px]">
               Sign in to view photos, connect with friends, and share your moments.

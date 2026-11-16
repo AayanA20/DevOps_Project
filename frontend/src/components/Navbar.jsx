@@ -78,7 +78,7 @@ const Navbar = () => {
             </div>
           </div>
           <span className="text-lg font-bold font-serif text-gray-900 tracking-tight">
-            Mini Instagram
+            Finsta
           </span>
         </NavLink>
 

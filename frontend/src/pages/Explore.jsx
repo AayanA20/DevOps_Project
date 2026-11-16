@@ -168,7 +168,7 @@ const Explore = () => {
                           {itemUser.username}
                         </p>
                         <p className="text-xs text-gray-500 truncate leading-relaxed">
-                          {itemUser.bio || 'Mini Instagram member'}
+                          {itemUser.bio || 'Finsta member'}
                         </p>
                       </div>
                     </Link>

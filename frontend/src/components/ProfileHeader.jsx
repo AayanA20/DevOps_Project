@@ -48,7 +48,7 @@ const HIGHLIGHTS_DATA = [
     img: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=600&auto=format&fit=crop&q=80',
     icon: Laptop,
     gradient: 'from-purple-500 to-pink-600',
-    caption: 'Building Mini Instagram architecture & System Design 💻✨',
+    caption: 'Building Finsta architecture & System Design 💻✨',
   },
 ];
 
@@ -223,7 +223,7 @@ const ProfileHeader = ({
             <div>
               <p className="font-semibold text-xs text-gray-900">{profileUser?.email}</p>
               <p className="text-xs text-gray-700 whitespace-pre-line mt-1 leading-relaxed">
-                {profileUser?.bio || 'Mini Instagram member • Sharing memories & snapshots 📸'}
+                {profileUser?.bio || 'Finsta member • Sharing memories & snapshots 📸'}
               </p>
               {joinDate && (
                 <div className="flex items-center justify-center sm:justify-start space-x-1 text-[11px] text-gray-400 mt-2">
